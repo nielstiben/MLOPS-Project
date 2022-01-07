@@ -17,7 +17,7 @@ def main(cfg: DictConfig) -> None:
     logger = logging.getLogger(__name__)
     logger.info("Downloading dataset from kaggle")
 
-    dataset_path = cfg.data.path
+    dataset_path = os.path.join(hydra.utils.get_original_cwd(), cfg.data.path)
     zip_folder = os.path.join(dataset_path, "raw")
 
     try:
