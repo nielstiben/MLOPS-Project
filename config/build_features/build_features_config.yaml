@@ -1,0 +1,3 @@
+path: data
+max_sequence_length: 128
+tokenizer: 'vinai/bertweet-large'
