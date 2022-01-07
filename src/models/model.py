@@ -92,7 +92,8 @@ class MegaCoolTransformer(LightningModule):
         elif self.hparams["scheduler"] == "MultiStepLR":
             scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=self.hparams['scheduler']['milestones'],
                                                              gamma=self.hparams['scheduler']['gamma'])
-
+        else:
+            raise ValueError("Unknown scheduler")
         return [optimizer], [scheduler]
 
     @staticmethod
