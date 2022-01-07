@@ -4,18 +4,20 @@ import os
 import zipfile
 from pathlib import Path
 
-import click
+import hydra
+from omegaconf import DictConfig
 from dotenv import find_dotenv, load_dotenv
 
 
-@click.command()
-@click.argument("dataset_path", type=click.Path())
-def main(dataset_path: str) -> None:
+@hydra.main(config_path="./../../config", config_name="default_config.yaml")
+def main(cfg: DictConfig) -> None:
     """Runs data processing scripts to turn raw data from (../raw) into
     cleaned data ready to be analyzed (saved in ../processed).
     """
     logger = logging.getLogger(__name__)
     logger.info("Downloading dataset from kaggle")
+
+    dataset_path = cfg.data.path
     zip_folder = os.path.join(dataset_path, "raw")
 
     try:
