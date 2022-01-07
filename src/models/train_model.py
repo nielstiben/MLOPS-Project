@@ -6,8 +6,8 @@ from torch.utils.data import DataLoader
 from src.models.model import MegaCoolTransformer
 
 
-@hydra.main(config_path="../../config", config_name='default_config.yaml')
-def train():
+@hydra.main(config_path="../../config1", config_name='default_config.yaml')
+def train(config):
     logger = logging.getLogger(__name__)
     logger.info("Strat Training..")
 
