@@ -21,12 +21,14 @@ def main(dataset_path):
     try:
         import kaggle
     except:
-        logger.warn(f"Must athenticate the kaggle api according to https://www.kaggle.com/docs/api")
+        logger.warning(f"Must athenticate the kaggle api according to https://www.kaggle.com/docs/api")
+        exit(1)
 
     try:
         kaggle.api.competition_download_files("nlp-getting-started", path=zip_folder)
     except Exception:
-        logger.warn(f"Must join the challange at: https://www.kaggle.com/c/nlp-getting-started/data")
+        logger.warning(f"Must join the challange at: https://www.kaggle.com/c/nlp-getting-started/data")
+        exit(1)
 
     out_folder_raw = os.path.join(dataset_path, "interim")
     os.makedirs(out_folder_raw, exist_ok=True)
