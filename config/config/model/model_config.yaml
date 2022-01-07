@@ -1,1 +1,5 @@
 # @package _group_
+lr: 6e-6
+eps: 1e-8
+pretrained-model: 'bert-large-uncased'
+num_labels: 2
