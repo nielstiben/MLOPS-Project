@@ -2,21 +2,20 @@
 import logging
 import os
 import zipfile
-from pathlib import Path
+import hydra
 
-import click
+from pathlib import Path
 from dotenv import find_dotenv, load_dotenv
 
-
-@click.command()
-@click.argument("dataset_path", type=click.Path())
-def main(dataset_path: str) -> None:
+@hydra.main(config_path="../../config/data/", config_name='data_config.yaml')
+def main(conf) -> None:
     """Runs data processing scripts to turn raw data from (../raw) into
     cleaned data ready to be analyzed (saved in ../processed).
     """
+
     logger = logging.getLogger(__name__)
     logger.info("Downloading dataset from kaggle")
-    zip_folder = os.path.join(dataset_path, "raw")
+    zip_folder = os.path.join(conf.dataset_path, "raw")
 
     try:
         import kaggle
@@ -35,7 +34,7 @@ def main(dataset_path: str) -> None:
         )
         exit(1)
 
-    out_folder_raw = os.path.join(dataset_path, "interim")
+    out_folder_raw = os.path.join(conf.dataset_path, "interim")
     os.makedirs(out_folder_raw, exist_ok=True)
     with zipfile.ZipFile(
         os.path.join(zip_folder, "nlp-getting-started.zip"), "r"
