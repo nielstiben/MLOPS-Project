@@ -3,17 +3,37 @@ import click
 import logging
 from pathlib import Path
 from dotenv import find_dotenv, load_dotenv
+import os
+import zipfile
+import pandas
 
 
 @click.command()
-@click.argument('input_filepath', type=click.Path(exists=True))
-@click.argument('output_filepath', type=click.Path())
-def main(input_filepath, output_filepath):
+@click.argument('dataset_path', type=click.Path())
+def main(dataset_path):
     """ Runs data processing scripts to turn raw data from (../raw) into
         cleaned data ready to be analyzed (saved in ../processed).
     """
     logger = logging.getLogger(__name__)
-    logger.info('making final data set from raw data')
+    logger.info('Downloading dataset from kaggle')
+    zip_folder = os.path.join(dataset_path, "raw")
+
+    try:
+        import kaggle
+    except:
+        logger.warn(f"Must athenticate the kaggle api according to https://www.kaggle.com/docs/api")
+
+    try:
+        kaggle.api.competition_download_files("nlp-getting-started", path=zip_folder)
+    except Exception:
+        logger.warn(f"Must join the challange at: https://www.kaggle.com/c/nlp-getting-started/data")
+
+    out_folder_raw = os.path.join(dataset_path, "interim")
+    os.makedirs(out_folder_raw, exist_ok=True)
+    with zipfile.ZipFile(os.path.join(zip_folder, "nlp-getting-started.zip"), 'r') as zip_ref:
+        zip_ref.extractall(out_folder_raw)
+
+    
 
 
 if __name__ == '__main__':
