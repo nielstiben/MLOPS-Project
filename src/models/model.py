@@ -42,6 +42,7 @@ class MegaCoolTransformer(LightningModule):
     def setup(self, stage=None) -> None:
         pass
 
+
     def configure_optimizers(self):
         if self.hparams["optimizer"] == "AdamW":
             optimizer = torch.optim.AdamW(self.parameters(), lr=self.hparams["lr"])
