@@ -43,7 +43,57 @@ class MegaCoolTransformer(LightningModule):
         pass
 
     def configure_optimizers(self):
-        pass
+        if self.hparams["optimizer"] == "AdamW":
+            optimizer = torch.optim.AdamW(self.parameters(), lr=self.hparams["lr"])
+        elif self.hparams["optimizer"] == "Adam":
+            optimizer = torch.optim.Adam(self.parameters(), lr=self.hparams["lr"])
+        elif self.hparams["optimizer"] == "SGD":
+            optimizer = torch.optim.SGD(self.parameters(), lr=self.hparams["lr"])
+        elif self.hparams["optimizer"] == "RMSprop":
+            optimizer = torch.optim.RMSprop(self.parameters(), lr=self.hparams["lr"])
+        elif self.hparams["optimizer"] == "Adagrad":
+            optimizer = torch.optim.Adagrad(self.parameters(), lr=self.hparams["lr"])
+        elif self.hparams["optimizer"] == "Adadelta":
+            optimizer = torch.optim.Adadelta(self.parameters(), lr=self.hparams["lr"])
+        elif self.hparams["optimizer"] == "Adamax":
+            optimizer = torch.optim.Adamax(self.parameters(), lr=self.hparams["lr"])
+        elif self.hparams["optimizer"] == "ASGD":
+            optimizer = torch.optim.ASGD(self.parameters(), lr=self.hparams["lr"])
+        elif self.hparams["optimizer"] == "LBFGS":
+            optimizer = torch.optim.LBFGS(self.parameters(), lr=self.hparams["lr"])
+        elif self.hparams["optimizer"] == "SparseAdam":
+            optimizer = torch.optim.SparseAdam(self.parameters(), lr=self.hparams["lr"])
+        elif self.hparams["optimizer"] == "SparseASGD":
+            optimizer = torch.optim.SparseASGD(self.parameters(), lr=self.hparams["lr"])
+        else:
+            raise ValueError("Unknown optimizer")
+
+        if self.hparams["scheduler"] == "ReduceLROnPlateau":
+            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode=self.hparams['scheduler']['mode'],
+                                                                   factor=self.hparams['scheduler']['factor'],
+                                                                   patience=self.hparams['scheduler']['patience'],
+                                                                   verbose=True)
+        elif self.hparams["scheduler"] == "CosineAnnealingLR":
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.hparams['scheduler']['T_max'],
+                                                                   eta_min=self.hparams['scheduler']['eta_min'])
+        elif self.hparams["scheduler"] == "OneCycleLR":
+            scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=self.hparams['scheduler']['max_lr'],
+                                                            total_steps=self.hparams['scheduler']['total_steps'],
+                                                            pct_start=self.hparams['scheduler']['pct_start'],
+                                                            div_factor=self.hparams['scheduler']['div_factor'],
+                                                            final_div_factor=self.hparams['scheduler']['final_div_factor'],
+                                                            anneal_strategy=self.hparams['scheduler']['anneal_strategy'],
+                                                            min_lr=self.hparams['scheduler']['min_lr'])
+        elif self.hparams["scheduler"] == "ExponentialLR":
+            scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=self.hparams['scheduler']['gamma'])
+        elif self.hparams["scheduler"] == "CosineAnnealingWarmRestarts":
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=self.hparams['scheduler']['T_0'],
+                                                                             T_mult=self.hparams['scheduler']['T_mult'])
+        elif self.hparams["scheduler"] == "MultiStepLR":
+            scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=self.hparams['scheduler']['milestones'],
+                                                             gamma=self.hparams['scheduler']['gamma'])
+
+        return [optimizer], [scheduler]
 
     @staticmethod
     def flat_accuracy(preds, labels):
