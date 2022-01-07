@@ -63,8 +63,6 @@ class MegaCoolTransformer(LightningModule):
             optimizer = torch.optim.LBFGS(self.parameters(), lr=self.hparams["lr"])
         elif self.hparams["optimizer"] == "SparseAdam":
             optimizer = torch.optim.SparseAdam(self.parameters(), lr=self.hparams["lr"])
-        elif self.hparams["optimizer"] == "SparseASGD":
-            optimizer = torch.optim.SparseASGD(self.parameters(), lr=self.hparams["lr"])
         else:
             raise ValueError("Unknown optimizer")
 
@@ -76,14 +74,6 @@ class MegaCoolTransformer(LightningModule):
         elif self.hparams["scheduler"] == "CosineAnnealingLR":
             scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.hparams['scheduler']['T_max'],
                                                                    eta_min=self.hparams['scheduler']['eta_min'])
-        elif self.hparams["scheduler"] == "OneCycleLR":
-            scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=self.hparams['scheduler']['max_lr'],
-                                                            total_steps=self.hparams['scheduler']['total_steps'],
-                                                            pct_start=self.hparams['scheduler']['pct_start'],
-                                                            div_factor=self.hparams['scheduler']['div_factor'],
-                                                            final_div_factor=self.hparams['scheduler']['final_div_factor'],
-                                                            anneal_strategy=self.hparams['scheduler']['anneal_strategy'],
-                                                            min_lr=self.hparams['scheduler']['min_lr'])
         elif self.hparams["scheduler"] == "ExponentialLR":
             scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=self.hparams['scheduler']['gamma'])
         elif self.hparams["scheduler"] == "CosineAnnealingWarmRestarts":
