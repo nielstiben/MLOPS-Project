@@ -41,6 +41,7 @@ point on the checklist for the exam.
 
 - [X] Create a git repository
 - [X] Make sure that all team members have write access to the github repository
+- [X] Create a dedicated environment for you project to keep track of your packages (using conda)
 - [X] Create the initial file structure using cookiecutter
 - [ ] Fill out the `make_dataset.py` file such that it downloads whatever data you need and
 - [ ] Add a model file and a training script and get that running
