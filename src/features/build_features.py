@@ -6,7 +6,7 @@ from pathlib import Path
 
 import hydra
 import numpy as np
-import pandas as pd
+import pandas as pd  # type: ignore
 import torch
 from dotenv import find_dotenv, load_dotenv
 from omegaconf import DictConfig
@@ -33,9 +33,15 @@ def main(cfg: DictConfig) -> None:
     )
     split_train = math.floor(len(data) * (c.split_train / 100))
     split_eval = math.floor(len(data) * ((c.split_train + c.split_eval) / 100))
-    tweet_train, label_train = list(data.text[:split_train]), list(data.target[:split_train])
-    tweet_eval, label_eval = list(data.text[split_train:split_eval]), list(data.target[split_train:split_eval])
-    tweet_test, lable_test = list(data.text[split_eval:]), list(data.target[split_eval:])
+    tweet_train, label_train = list(data.text[:split_train]), list(
+        data.target[:split_train]
+    )
+    tweet_eval, label_eval = list(data.text[split_train:split_eval]), list(
+        data.target[split_train:split_eval]
+    )
+    tweet_test, lable_test = list(data.text[split_eval:]), list(
+        data.target[split_eval:]
+    )
 
     # %% Encode
     tokenizer = AutoTokenizer.from_pretrained(cfg.model["pretrained-model"])
@@ -52,21 +58,21 @@ def main(cfg: DictConfig) -> None:
     X_test = list(map(encode, list(tweet_test)))
 
     # %% Convert to tensor
-    X_train = torch.IntTensor(X_train)
-    y_train = torch.IntTensor(label_train).long()
-    X_eval = torch.IntTensor(X_eval)
-    y_eval = torch.IntTensor(label_eval).long()
-    X_test = torch.IntTensor(X_test)
-    y_test = torch.IntTensor(lable_test).long()
+    X_train_t = torch.IntTensor(X_train)
+    y_train_t = torch.IntTensor(label_train).long()
+    X_eval_t = torch.IntTensor(X_eval)
+    y_eval_t = torch.IntTensor(label_eval).long()
+    X_test_t = torch.IntTensor(X_test)
+    y_test_t = torch.IntTensor(lable_test).long()
 
     # %% Save to file
     data_path = os.path.join(hydra.utils.get_original_cwd(), c.path, "processed")
-    torch.save(X_train, os.path.join(data_path, "tweets_train.pkl"))
-    torch.save(y_train, os.path.join(data_path, "label_train.pkl"))
-    torch.save(X_eval, os.path.join(data_path, "tweets_eval.pkl"))
-    torch.save(y_eval, os.path.join(data_path, "label_eval.pkl"))
-    torch.save(X_test, os.path.join(data_path, "tweets_test.pkl"))
-    torch.save(y_test, os.path.join(data_path, "label_test.pkl"))
+    torch.save(X_train_t, os.path.join(data_path, "tweets_train.pkl"))
+    torch.save(y_train_t, os.path.join(data_path, "label_train.pkl"))
+    torch.save(X_eval_t, os.path.join(data_path, "tweets_eval.pkl"))
+    torch.save(y_eval_t, os.path.join(data_path, "label_eval.pkl"))
+    torch.save(X_test_t, os.path.join(data_path, "tweets_test.pkl"))
+    torch.save(y_test_t, os.path.join(data_path, "label_test.pkl"))
     logger.info("Finished! Output saved to '{}'".format(data_path))
 
 

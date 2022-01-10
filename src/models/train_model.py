@@ -4,6 +4,7 @@ from pathlib import Path
 
 import hydra
 from dotenv import find_dotenv, load_dotenv
+from omegaconf import DictConfig
 from pytorch_lightning import Trainer
 
 from src.data.dataset import DesasterTweetDataModule
@@ -11,7 +12,7 @@ from src.models.model import MegaCoolTransformer
 
 
 @hydra.main(config_path="../../config", config_name="default_config.yaml")
-def main(config):
+def main(config: DictConfig):
     logger = logging.getLogger(__name__)
     logger.info("Start Training..")
 

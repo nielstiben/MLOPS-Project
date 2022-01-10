@@ -21,7 +21,7 @@ def main(cfg: DictConfig) -> None:
     zip_folder = os.path.join(dataset_path, "raw")
 
     try:
-        import kaggle
+        import kaggle  # type: ignore
     except Exception:
         logger.warning(
             "Must athenticate the kaggle api according to https://www.kaggle.com/docs/api"  # noqa: E501

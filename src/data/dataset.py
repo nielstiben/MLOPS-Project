@@ -41,28 +41,28 @@ class DesasterTweetDataModule(pl.LightningDataModule):
         super().__init__()
         self.data_path = os.path.join(data_path, "processed")
         self.batch_size = batch_size
-        self.cpu_cnt = os.cpu_count()
+        self.cpu_cnt = os.cpu_count() or 2
 
-    def prepare_data(self):
+    def prepare_data(self) -> None:
         if not os.path.isdir(self.data_path):
             raise Exception("data is not prepared")
 
-    def setup(self, stage: Optional[str] = None):
+    def setup(self, stage: Optional[str] = None) -> None:
         self.trainset = DesasterTweets(self.data_path, "train")
         self.testset = DesasterTweets(self.data_path, "test")
         self.valset = DesasterTweets(self.data_path, "eval")
 
-    def train_dataloader(self):
+    def train_dataloader(self) -> DataLoader:
         return DataLoader(
             self.trainset, batch_size=self.batch_size, num_workers=self.cpu_cnt
         )
 
-    def test_dataloader(self):
+    def test_dataloader(self) -> DataLoader:
         return DataLoader(
             self.testset, batch_size=self.batch_size, num_workers=self.cpu_cnt
         )
 
-    def val_dataloader(self):
+    def val_dataloader(self) -> DataLoader:
         return DataLoader(
             self.valset, batch_size=self.batch_size, num_workers=self.cpu_cnt
         )

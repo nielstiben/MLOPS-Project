@@ -19,14 +19,14 @@ class MegaCoolTransformer(LightningModule):
     def forward(self, inputs):
         return self.model(inputs)
 
-    def training_step(self, batch: tuple[torch.Tensor, torch.Tensor], batch_idx: int):
+    def training_step(self, batch, batch_idx):
         tweet, labels = batch
         rtn = self.model(tweet, labels=labels)
         loss = rtn["loss"]
         self.log("train_loss", loss)
         return loss
 
-    def test_step(self, batch: tuple[torch.Tensor, torch.Tensor], batch_idx: int):
+    def test_step(self, batch, batch_idx):
         tweet, labels = batch
         out = self(tweet)
         logits = out["logits"]
@@ -35,9 +35,7 @@ class MegaCoolTransformer(LightningModule):
         accuracy = correct / len(labels)
         self.log("test_accuracy", accuracy, prog_bar=True)
 
-    def validation_step(
-        self, batch: tuple[torch.Tensor, torch.Tensor], batch_idx: int, dataloader_idx=0
-    ):
+    def validation_step(self, batch, batch_idx, dataloader_idx=0):
         tweets, labels = batch
         outputs = self.model(tweets, labels=labels)
         val_loss = outputs["loss"]
@@ -53,9 +51,13 @@ class MegaCoolTransformer(LightningModule):
     def setup(self, stage=None) -> None:
         pass
 
-    def configure_optimizers(self):
+    def configure_optimizers(  # noqa: C901
+        self,
+    ) -> tuple[list[torch.optim.Optimizer], list[object]]:
         if self.config.train["optimizer"] == "AdamW":
-            optimizer = torch.optim.AdamW(self.parameters(), lr=self.config.train["lr"])
+            optimizer = torch.optim.AdamW(
+                self.parameters(), lr=self.config.train["lr"]
+            )  # type: torch.optim.Optimizer
         elif self.config.train["optimizer"] == "Adam":
             optimizer = torch.optim.Adam(self.parameters(), lr=self.config.train["lr"])
         elif self.config.train["optimizer"] == "SGD":
@@ -94,7 +96,7 @@ class MegaCoolTransformer(LightningModule):
                 factor=self.config.train["scheduler"]["factor"],
                 patience=self.config.train["scheduler"]["patience"],
                 verbose=True,
-            )
+            )  # type: object
         elif self.config.train["scheduler"]["name"] == "CosineAnnealingLR":
             scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
                 optimizer,
@@ -119,4 +121,5 @@ class MegaCoolTransformer(LightningModule):
             )
         else:
             raise ValueError("Unknown scheduler")
+
         return [optimizer], [scheduler]
