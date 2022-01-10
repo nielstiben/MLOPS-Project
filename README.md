@@ -18,3 +18,7 @@ We are using the Kaggle dataset [Natural Language Processing with Disaster Tweet
 We intend to use pre-trained models due to limited time, and also train the model(s) additionally on our dataset. Since we are working on tweets then one of the models we plan to use is the [BERTweet](https://huggingface.co/docs/transformers/model_doc/bertweet) model which is the first public large-scale pre-trained language model for English Tweets.
 
 We might as well look into [ALBERT](https://huggingface.co/docs/transformers/model_doc/albert) and [DistilBERT](https://huggingface.co/docs/transformers/model_doc/distilbert) models, which optimize the BERT model and make the training process faster. That would be beneficial for us due to time constraints.
+
+
+## Checklist
+See [CHECKLIST.md](https://github.com/nielstiben/MLOPS-Project/blob/main/CHECKLIST.md)
