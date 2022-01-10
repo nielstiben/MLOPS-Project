@@ -23,7 +23,7 @@ def main(cfg: DictConfig) -> None:
     logger.info("Tokenize tweets")
     c = cfg.build_features
     assert (
-        c.split_train + c.split_test == 100
+        c.split_train + c.split_test + c.split_eval == 100
     ), "The split train:{c.split_train} test:{c.split_test} is not possible"
 
     # %% Fetch Data
@@ -31,11 +31,11 @@ def main(cfg: DictConfig) -> None:
     data = pd.read_csv(
         os.path.join(data_path, "train.csv"), dtype={"id": np.int16, "target": np.int8}
     )
-    size = c.split_train
-    end = c.split_train + c.split_test
-    split = math.floor(size * (c.split_train / 100))
-    tweet_train, label_train = list(data.text[:size]), list(data.target[:size])
-    tweet_test, lable_test = list(data.text[size:end]), list(data.target[size:end])
+    split_train = math.floor(len(data) * (c.split_train / 100))
+    split_eval = math.floor(len(data) * ((c.split_train + c.split_eval) / 100))
+    tweet_train, label_train = list(data.text[:split_train]), list(data.target[:split_train])
+    tweet_eval, label_eval = list(data.text[split_train:split_eval]), list(data.target[split_train:split_eval])
+    tweet_test, lable_test = list(data.text[split_eval:]), list(data.target[split_eval:])
 
     # %% Encode
     tokenizer = AutoTokenizer.from_pretrained(cfg.model["pretrained-model"])
@@ -48,11 +48,14 @@ def main(cfg: DictConfig) -> None:
         return tokens
 
     X_train = list(map(encode, list(tweet_train)))
+    X_eval = list(map(encode, list(tweet_eval)))
     X_test = list(map(encode, list(tweet_test)))
 
     # %% Convert to tensor
     X_train = torch.IntTensor(X_train)
     y_train = torch.IntTensor(label_train).long()
+    X_eval = torch.IntTensor(X_eval)
+    y_eval = torch.IntTensor(label_eval).long()
     X_test = torch.IntTensor(X_test)
     y_test = torch.IntTensor(lable_test).long()
 
@@ -60,6 +63,8 @@ def main(cfg: DictConfig) -> None:
     data_path = os.path.join(hydra.utils.get_original_cwd(), c.path, "processed")
     torch.save(X_train, os.path.join(data_path, "tweets_train.pkl"))
     torch.save(y_train, os.path.join(data_path, "label_train.pkl"))
+    torch.save(X_eval, os.path.join(data_path, "tweets_eval.pkl"))
+    torch.save(y_eval, os.path.join(data_path, "label_eval.pkl"))
     torch.save(X_test, os.path.join(data_path, "tweets_test.pkl"))
     torch.save(y_test, os.path.join(data_path, "label_test.pkl"))
     logger.info("Finished! Output saved to '{}'".format(data_path))
