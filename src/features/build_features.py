@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+import math
 import os
 from pathlib import Path
 
@@ -11,7 +12,6 @@ from dotenv import find_dotenv, load_dotenv
 from omegaconf import DictConfig
 from transformers import AutoTokenizer
 
-
 # See kaggle notebook:
 # https://www.kaggle.com/gunesevitan/nlp-with-disaster-tweets-eda-cleaning-and-bert
 
@@ -22,18 +22,23 @@ def main(cfg: DictConfig) -> None:
     logger = logging.getLogger(__name__)
     logger.info("Tokenize tweets")
     c = cfg.build_features
+    assert (
+        c.split_train + c.split_test == 100
+    ), "The split train:{c.split_train} test:{c.split_test} is not possible"
 
     # %% Fetch Data
     data_path = os.path.join(hydra.utils.get_original_cwd(), c.path, "interim")
-    train = pd.read_csv(
+    data = pd.read_csv(
         os.path.join(data_path, "train.csv"), dtype={"id": np.int16, "target": np.int8}
     )
-    test = pd.read_csv(os.path.join(data_path, "test.csv"), dtype={"id": np.int16})
-    X_train, y_train = list(train.text), list(train.target)
-    X_test = list(test.text)
+    size = c.split_train
+    end = c.split_train + c.split_test
+    split = math.floor(size * (c.split_train / 100))
+    tweet_train, label_train = list(data.text[:size]), list(data.target[:size])
+    tweet_test, lable_test = list(data.text[size:end]), list(data.target[size:end])
 
     # %% Encode
-    tokenizer = AutoTokenizer.from_pretrained(c.tokenizer)
+    tokenizer = AutoTokenizer.from_pretrained(cfg.model["pretrained-model"])
 
     def encode(text: str) -> list[int]:
         tokens = tokenizer.encode(text)
@@ -42,19 +47,21 @@ def main(cfg: DictConfig) -> None:
         tokens += [0] * pad_len
         return tokens
 
-    X_train = list(map(encode, list(X_train)))
-    X_test = list(map(encode, list(X_test)))
+    X_train = list(map(encode, list(tweet_train)))
+    X_test = list(map(encode, list(tweet_test)))
 
-    #%% Convert to tensor
+    # %% Convert to tensor
     X_train = torch.IntTensor(X_train)
-    y_train = torch.BoolTensor(y_train)
+    y_train = torch.IntTensor(label_train).long()
     X_test = torch.IntTensor(X_test)
+    y_test = torch.IntTensor(lable_test).long()
 
-    #%% Save to file
+    # %% Save to file
     data_path = os.path.join(hydra.utils.get_original_cwd(), c.path, "processed")
-    torch.save(X_train, os.path.join(data_path, "X_train.pkl"))
-    torch.save(y_train, os.path.join(data_path, "y_train.pkl"))
-    torch.save(X_test, os.path.join(data_path, "X_test.pkl"))
+    torch.save(X_train, os.path.join(data_path, "tweets_train.pkl"))
+    torch.save(y_train, os.path.join(data_path, "label_train.pkl"))
+    torch.save(X_test, os.path.join(data_path, "tweets_test.pkl"))
+    torch.save(y_test, os.path.join(data_path, "label_test.pkl"))
     logger.info("Finished! Output saved to '{}'".format(data_path))
 
 

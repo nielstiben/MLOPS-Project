@@ -1,0 +1,6 @@
+optimizer: Adam
+lr: 0.001
+batch_size: 128
+scheduler: 
+  name: ExponentialLR
+  gamma: 0.1

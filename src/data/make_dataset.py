@@ -5,8 +5,8 @@ import zipfile
 from pathlib import Path
 
 import hydra
-from omegaconf import DictConfig
 from dotenv import find_dotenv, load_dotenv
+from omegaconf import DictConfig
 
 
 @hydra.main(config_path="./../../config", config_name="default_config.yaml")
@@ -29,8 +29,7 @@ def main(cfg: DictConfig) -> None:
         exit(1)
 
     try:
-        kaggle.api.competition_download_files("nlp-getting-started",
-                                              path=zip_folder)
+        kaggle.api.competition_download_files("nlp-getting-started", path=zip_folder)
     except Exception:
         logger.warning(
             "Must join the challange at: https://www.kaggle.com/c/nlp-getting-started/data"  # noqa: E501

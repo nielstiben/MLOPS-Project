@@ -1,115 +1,64 @@
-import pandas as pd
-from pytorch_lightning import LightningDataModule
-from torch.utils.data import Dataset, DataLoader
-from torch.utils.data.dataset import T_co
-from transformers import AutoTokenizer
+# Note - you must have torchvision installed for this example
+import os
+from typing import Optional
+
+import pytorch_lightning as pl
+import torch
+from torch.utils.data import DataLoader
+from torch.utils.data.dataset import Dataset
 
 
-class GLUEDataModule(LightningDataModule):
+class DesasterTweets(Dataset):
+    def __init__(self, path: str, type: str = "train") -> None:
+        if type == "train":
+            file_tweets = os.path.join(path, "tweets_train.pkl")
+            file_labels = os.path.join(path, "label_train.pkl")
+        elif type == "test":
+            file_tweets = os.path.join(path, "tweets_test.pkl")
+            file_labels = os.path.join(path, "label_test.pkl")
+        else:
+            raise Exception(f"Unknown Dataset type: {type}")
 
-    task_text_field_map = {
-        "cola": ["sentence"],
-        "sst2": ["sentence"],
-        "mrpc": ["sentence1", "sentence2"],
-        "qqp": ["question1", "question2"],
-        "stsb": ["sentence1", "sentence2"],
-        "mnli": ["premise", "hypothesis"],
-        "qnli": ["question", "sentence"],
-        "rte": ["sentence1", "sentence2"],
-        "wnli": ["sentence1", "sentence2"],
-        "ax": ["premise", "hypothesis"],
-    }
+        self.tweets = torch.load(file_tweets)
+        self.labels = torch.load(file_labels)
 
-    glue_task_num_labels = {
-        "cola": 2,
-        "sst2": 2,
-        "mrpc": 2,
-        "qqp": 2,
-        "stsb": 1,
-        "mnli": 3,
-        "qnli": 2,
-        "rte": 2,
-        "wnli": 2,
-        "ax": 3,
-    }
+        assert len(self.tweets) == len(
+            self.labels
+        ), "Number of tweets does not match the number of labels"
 
-    loader_columns = [
-        "datasets_idx",
-        "input_ids",
-        "token_type_ids",
-        "attention_mask",
-        "start_positions",
-        "end_positions",
-        "labels",
-    ]
+    def __len__(self) -> int:
+        return len(self.tweets)
 
-    def __init__(
-        self,
-        model_name_or_path: str,
-        task_name: str = "mrpc",
-        max_seq_length: int = 128,
-        train_batch_size: int = 32,
-        eval_batch_size: int = 32,
-        **kwargs,
-    ):
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
+        return self.tweets[idx], self.labels[idx]
+
+
+class DesasterTweetDataModule(pl.LightningDataModule):
+    def __init__(self, data_path: str, batch_size: int = 32):
         super().__init__()
-        self.model_name_or_path = model_name_or_path
-        self.task_name = task_name
-        self.max_seq_length = max_seq_length
-        self.train_batch_size = train_batch_size
-        self.eval_batch_size = eval_batch_size
-
-        self.text_fields = self.task_text_field_map[task_name]
-        self.num_labels = self.glue_task_num_labels[task_name]
-        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name_or_path, use_fast=True)
-
-    def setup(self, stage: str):
-        self.dataset = datasets.load_dataset("glue", self.task_name)
-
-        for split in self.dataset.keys():
-            self.dataset[split] = self.dataset[split].map(
-                self.convert_to_features,
-                batched=True,
-                remove_columns=["label"],
-            )
-            self.columns = [c for c in self.dataset[split].column_names if c in self.loader_columns]
-            self.dataset[split].set_format(type="torch", columns=self.columns)
-
-        self.eval_splits = [x for x in self.dataset.keys() if "validation" in x]
+        self.data_path = os.path.join(data_path, "processed")
+        self.batch_size = batch_size
+        self.cpu_cnt = os.cpu_count()
 
     def prepare_data(self):
-        datasets.load_dataset("glue", self.task_name)
-        AutoTokenizer.from_pretrained(self.model_name_or_path, use_fast=True)
+        if not os.path.isdir(self.data_path):
+            raise Exception("data is not prepared")
+
+    def setup(self, stage: Optional[str] = None):
+        self.trainset = DesasterTweets(self.data_path, "train")
+        self.testset = DesasterTweets(self.data_path, "test")
 
     def train_dataloader(self):
-        return DataLoader(self.dataset["train"], batch_size=self.train_batch_size)
-
-    def val_dataloader(self):
-        if len(self.eval_splits) == 1:
-            return DataLoader(self.dataset["validation"], batch_size=self.eval_batch_size)
-        elif len(self.eval_splits) > 1:
-            return [DataLoader(self.dataset[x], batch_size=self.eval_batch_size) for x in self.eval_splits]
-
-    def test_dataloader(self):
-        if len(self.eval_splits) == 1:
-            return DataLoader(self.dataset["test"], batch_size=self.eval_batch_size)
-        elif len(self.eval_splits) > 1:
-            return [DataLoader(self.dataset[x], batch_size=self.eval_batch_size) for x in self.eval_splits]
-
-    def convert_to_features(self, example_batch, indices=None):
-
-        # Either encode single sentence or sentence pairs
-        if len(self.text_fields) > 1:
-            texts_or_text_pairs = list(zip(example_batch[self.text_fields[0]], example_batch[self.text_fields[1]]))
-        else:
-            texts_or_text_pairs = example_batch[self.text_fields[0]]
-
-        # Tokenize the text/text pairs
-        features = self.tokenizer.batch_encode_plus(
-            texts_or_text_pairs, max_length=self.max_seq_length, pad_to_max_length=True, truncation=True
+        return DataLoader(
+            self.trainset, batch_size=self.batch_size, num_workers=self.cpu_cnt
         )
 
-        # Rename label to labels to make it easier to pass to model forward
-        features["labels"] = example_batch["label"]
+    def test_dataloader(self):
+        return DataLoader(
+            self.testset, batch_size=self.batch_size, num_workers=self.cpu_cnt
+        )
 
-        return features
+    def val_dataloader(self):
+        return DataLoader(
+            self.testset, batch_size=self.batch_size, num_workers=self.cpu_cnt
+        )
