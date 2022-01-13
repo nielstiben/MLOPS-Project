@@ -54,7 +54,7 @@ point on the checklist for the exam.
 - [ ] Write one or multiple configurations files for your experiments
 - [X] Used Hydra to load the configurations and manage your hyperparameters
 - [ ] When you have something that works somewhat, remember at some point to to some profiling and see if you can optimize your code
-- [ ] Use wandb to log training progress and other important metrics/artifacts in your code
+- [X] Use wandb to log training progress and other important metrics/artifacts in your code
 - [X] Use pytorch-lightning (if applicable) to reduce the amount of boilerplate in your code
 
 ### Week 2
