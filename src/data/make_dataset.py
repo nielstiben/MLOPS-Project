@@ -4,22 +4,24 @@ import os
 import zipfile
 from pathlib import Path
 
-import click
+import hydra
 from dotenv import find_dotenv, load_dotenv
+from omegaconf import DictConfig
 
 
-@click.command()
-@click.argument("dataset_path", type=click.Path())
-def main(dataset_path: str) -> None:
+@hydra.main(config_path="./../../config", config_name="default_config.yaml")
+def main(cfg: DictConfig) -> None:
     """Runs data processing scripts to turn raw data from (../raw) into
     cleaned data ready to be analyzed (saved in ../processed).
     """
     logger = logging.getLogger(__name__)
     logger.info("Downloading dataset from kaggle")
+
+    dataset_path = os.path.join(hydra.utils.get_original_cwd(), cfg.data.path)
     zip_folder = os.path.join(dataset_path, "raw")
 
     try:
-        import kaggle
+        import kaggle  # type: ignore
     except Exception:
         logger.warning(
             "Must athenticate the kaggle api according to https://www.kaggle.com/docs/api"  # noqa: E501
@@ -27,8 +29,7 @@ def main(dataset_path: str) -> None:
         exit(1)
 
     try:
-        kaggle.api.competition_download_files("nlp-getting-started",
-                                              path=zip_folder)
+        kaggle.api.competition_download_files("nlp-getting-started", path=zip_folder)
     except Exception:
         logger.warning(
             "Must join the challange at: https://www.kaggle.com/c/nlp-getting-started/data"  # noqa: E501
