@@ -6,6 +6,7 @@ import hydra
 from dotenv import find_dotenv, load_dotenv
 from omegaconf import DictConfig
 from pytorch_lightning import Trainer
+from transformers import TrainingArguments
 
 from src.data.dataset import DesasterTweetDataModule
 from src.models.model import MegaCoolTransformer
@@ -21,7 +22,9 @@ def main(config: DictConfig):
         batch_size=config.train.batch_size,
     )
     model = MegaCoolTransformer(config)
-    trainer = Trainer(max_epochs=1)
+
+    args = TrainingArguments(report_to="wandb")
+    trainer = Trainer(max_epochs=1, args=args)
     trainer.fit(model, data_module)
     trainer.test(model, data_module)
 
