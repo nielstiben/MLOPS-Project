@@ -1,9 +1,15 @@
+import os
+
+import pytest
 from hydra import compose, initialize
 
 from src.data.dataset import DesasterTweetDataModule
 from tests import _PATH_DATA
 
 
+@pytest.mark.skipif(
+    not os.path.exists(_PATH_DATA + "/processed"), reason="Data files not found"
+)
 def test_loaders_len_split():
     with initialize("../config/"):
         cfg = compose(config_name="default_config.yaml")
