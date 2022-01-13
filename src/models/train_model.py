@@ -14,7 +14,7 @@ from src.models.model import MegaCoolTransformer
 @hydra.main(config_path="../../config", config_name="default_config.yaml")
 def main(config: DictConfig):
     logger = logging.getLogger(__name__)
-    logger.info("Start Training..")
+    logger.info("Start Training...")
 
     data_module = DesasterTweetDataModule(
         os.path.join(hydra.utils.get_original_cwd(), config.data.path),
@@ -22,9 +22,7 @@ def main(config: DictConfig):
     )
     model = MegaCoolTransformer(config)
     trainer = Trainer(max_epochs=1)
-
     trainer.fit(model, data_module)
-
     trainer.test(model, data_module)
 
 
