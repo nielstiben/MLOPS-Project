@@ -1,29 +1,20 @@
-from importlib import import_module
-from pydoc import importfile
-import torch
-import numpy as np
-from torch.utils.data import Dataset, DataLoader
-import pytest
+from hydra import compose, initialize
+
 from src.data.dataset import DesasterTweetDataModule
-import hydra
-from hydra import initialize, compose 
-from omegaconf import DictConfig
-import os
-from tests import _PROJECT_ROOT, _PATH_DATA
+from tests import _PATH_DATA
 
 
 def test_loaders_len_split():
-    with initialize('../config/'):
-        cfg = compose(config_name='default_config.yaml')
+    with initialize("../config/"):
+        cfg = compose(config_name="default_config.yaml")
         data_module = DesasterTweetDataModule(
-            _PATH_DATA,
-            batch_size=cfg.train.batch_size,
+            _PATH_DATA, batch_size=cfg.train.batch_size,
         )
         data_module.setup()
         train_loader = data_module.train_dataloader()
         val_loader = data_module.val_dataloader()
         test_loader = data_module.test_dataloader()
-        
+
         train_set_len = len(train_loader.dataset)
         val_set_len = len(val_loader.dataset)
         test_set_len = len(test_loader.dataset)
