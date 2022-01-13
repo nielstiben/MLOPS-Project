@@ -32,26 +32,3 @@ def test_loaders_len_split():
         assert round(train_set_len * 100 / 7613) == cfg.build_features.split_train
         assert round(val_set_len * 100 / 7613) == cfg.build_features.split_eval
         assert round(test_set_len * 100 / 7613) == cfg.build_features.split_test
-
-
-
-
-# def test_datapoints_shape():
-#     trainloader, testloader = mnist()
-#     for img, _ in trainloader:
-#         assert img.shape[1:] == torch.Size([1, 28, 28])
-
-#     for img, _ in testloader:
-#         assert img.shape[1:] == torch.Size([1, 28, 28])
-
-
-# def test_wrong_data_mode():
-#     with pytest.raises(AttributeError, match='wrong option'):
-#         trainset = CorruptMNISTset(type="haha")
-
-
-# def test_all_labels_present():
-#     trainloader, testloader = mnist()
-#     train_labels = torch.empty(0)
-#     for _, labels in trainloader:
-#         train_labels = torch.cat((train_labels, labels), 0)
