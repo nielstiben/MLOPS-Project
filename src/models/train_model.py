@@ -8,8 +8,9 @@ from omegaconf import DictConfig
 from pytorch_lightning import Trainer
 from transformers import TrainingArguments
 
-from src.models.model import MegaCoolTransformer
 from src.data.dataset import DesasterTweetDataModule
+from src.models.model import MegaCoolTransformer
+
 
 @hydra.main(config_path="../../config", config_name="default_config.yaml")
 def main(config: DictConfig):
