@@ -20,7 +20,6 @@ jobs:
       with:
         python-version: 3.8
         cache: 'pip'
-    - name: Install dependencies
     - name: Test with pytest
       run: |
         pip install flake8
