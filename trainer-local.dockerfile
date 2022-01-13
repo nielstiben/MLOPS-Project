@@ -11,4 +11,6 @@ COPY data/ data/
 
 WORKDIR /
 RUN python3 -m pip install -r /tmp/requirements.txt
-ENTRYPOINT ["python", "-u", "src/models/train_model.py"]
+RUN make data
+RUN make build_features
+ENTRYPOINT ["make", "train"]

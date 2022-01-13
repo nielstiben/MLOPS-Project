@@ -1,4 +1,6 @@
 [core]
-    remote = storage
+    remote = gcloud
 ['remote "storage"']
     url = gdrive://1GSESiQg5PP3ZsY_Np0H0M-1GVPywlqWb
+['remote "gcloud"']
+    url = gs://dtu-mlops-project-dvc/dvc
