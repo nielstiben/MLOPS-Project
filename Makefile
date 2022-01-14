@@ -10,7 +10,8 @@ PROFILE = default
 PROJECT_NAME = mlops-nlp-project
 PYTHON_INTERPRETER = python3
 DOCKER = docker
-UNAME := $(shell uname -m)
+UNAME = $(shell uname -m)
+GIT_HASH = $(shell git rev-parse --short HEAD)
 
 ifeq (,$(shell which conda))
 HAS_CONDA=False
@@ -43,15 +44,26 @@ train: requirements
 docker-local:
 	$(DOCKER) build -f trainer-local.dockerfile . -t trainer:latest
 
-docker_cloud:
+build_docker_cloud:
 	$(info Checking arm64 or amd64)
 ifeq ($(UNAME), arm64)
-	$(DOCKER) buildx build --platform linux/amd64 -f trainer_cloud.dockerfile . -t gcr.io/dtu-mlops-project/trainer:latest
+	$(DOCKER) buildx build --platform linux/amd64 -f trainer_cloud.dockerfile . -t gcr.io/dtu-mlops-project/trainer:$(GIT_HASH)
 else
-	$(DOCKER) build -f trainer_cloud.dockerfile . -t gcr.io/dtu-mlops-project/trainer:latest
+	$(DOCKER) build -f trainer_cloud.dockerfile . -t gcr.io/dtu-mlops-project/trainer:$(GIT_HASH)
 endif
+	$(info Build image: gcr.io/dtu-mlops-project/trainer:$(GIT_HASH))
 
+run_on_cloud:
+	$(DOCKER) push gcr.io/dtu-mlops-project/trainer:$(GIT_HASH)
+	gcloud ai-platform jobs submit training trainig_$(GIT_HASH) \
+  		--region europe-west4 \
+  		--master-image-uri gcr.io/dtu-mlops-project/trainer:$(GIT_HASH) \
+  		--scale-tier=custom --master-machine-type=standard_v100 \
+  		--
+	$(info Run image: gcr.io/dtu-mlops-project/trainer:$(GIT_HASH))
+	gcloud ai-platform jobs describe trainig_$(GIT_HASH)
 
+build_and_run_cloud: build_docker_cloud run_on_cloud
 
 
 ## Delete all compiled Python files
