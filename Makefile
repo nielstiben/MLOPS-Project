@@ -10,6 +10,7 @@ PROFILE = default
 PROJECT_NAME = mlops-nlp-project
 PYTHON_INTERPRETER = python3
 DOCKER = docker
+UNAME := $(shell uname -m)
 
 ifeq (,$(shell which conda))
 HAS_CONDA=False
@@ -39,8 +40,19 @@ train: requirements
 	$(PYTHON_INTERPRETER) src/models/train_model.py
 
 ## Docker
-docker-local: requirements
-	$(DOCKER ) build -f trainer-local.dockerfile . -t trainer:latest
+docker-local:
+	$(DOCKER) build -f trainer-local.dockerfile . -t trainer:latest
+
+docker_cloud:
+	$(info Checking arm64 or amd64)
+ifeq ($(UNAME), arm64)
+	$(DOCKER) buildx build --platform linux/amd64 -f trainer_cloud.dockerfile . -t gcr.io/dtu-mlops-project/trainer:latest
+else
+	$(DOCKER) build -f trainer_cloud.dockerfile . -t gcr.io/dtu-mlops-project/trainer:latest
+endif
+
+
+
 
 ## Delete all compiled Python files
 clean:
