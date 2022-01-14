@@ -3,18 +3,26 @@ import os
 from pathlib import Path
 
 import hydra
+import torch
 from dotenv import find_dotenv, load_dotenv
 from omegaconf import DictConfig
 from pytorch_lightning import Trainer
-from transformers import TrainingArguments
 
-from src.models.model import MegaCoolTransformer
 from src.data.dataset import DesasterTweetDataModule
+from src.models.model import MegaCoolTransformer
+
 
 @hydra.main(config_path="../../config", config_name="default_config.yaml")
 def main(config: DictConfig):
     logger = logging.getLogger(__name__)
     logger.info("Start Training...")
+    gpus = 0
+    if torch.cuda.is_available():
+        # selects all available gpus
+        print(f"Using {torch.cuda.device_count()} GPU(s) for training")
+        gpus = -1
+    else:
+        print("Using CPU for training")
 
     data_module = DesasterTweetDataModule(
         os.path.join(hydra.utils.get_original_cwd(), config.data.path),
@@ -22,8 +30,7 @@ def main(config: DictConfig):
     )
     model = MegaCoolTransformer(config)
 
-    args = TrainingArguments(report_to="wandb")
-    trainer = Trainer(max_epochs=1, args=args)
+    trainer = Trainer(max_epochs=2, gpus=gpus)
     trainer.fit(model, data_module)
     trainer.test(model, data_module)
 
