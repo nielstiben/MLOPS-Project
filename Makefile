@@ -55,7 +55,7 @@ endif
 
 run_on_cloud:
 	$(DOCKER) push gcr.io/dtu-mlops-project/trainer:$(GIT_HASH)
-	gcloud ai-platform jobs submit training trainig_$(GIT_HASH) \
+	gcloud ai-platform jobs submit training training_$(GIT_HASH) \
   		--region europe-west4 \
   		--master-image-uri gcr.io/dtu-mlops-project/trainer:$(GIT_HASH) \
   		--scale-tier=custom --master-machine-type=standard_v100 \
