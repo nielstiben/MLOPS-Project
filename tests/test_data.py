@@ -4,11 +4,13 @@ import pytest
 from hydra import compose, initialize
 
 from src.data.dataset import DesasterTweetDataModule
-from tests import _PATH_DATA
+from tests import _PATH_DATA, _PROJECT_ROOT
 
 
 @pytest.mark.skipif(
-    not os.path.exists(_PATH_DATA + "/processed"), reason="Data files not found"
+    not os.path.exists(_PATH_DATA + "/processed")
+    or not os.path.exists(_PROJECT_ROOT + "/config"),
+    reason="Data and config files not found",
 )
 def test_loaders_len_split():
     with initialize("../config/"):
