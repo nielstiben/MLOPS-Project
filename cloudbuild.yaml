@@ -1,0 +1,6 @@
+steps:
+   - name: 'gcr.io/cloud-builders/docker'
+     args: ['build', '-f', 'trainer_cloud.dockerfile', '-t',  'gcr.io/dtu-mlops-project/trainer:latest', '.']
+   - name: 'gcr.io/cloud-builders/docker'
+     args: ['push', 'gcr.io/dtu-mlops-project/trainer:latest']
+timeout: 3600s
