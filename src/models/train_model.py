@@ -5,8 +5,10 @@ from pathlib import Path
 import hydra
 import torch
 from dotenv import find_dotenv, load_dotenv
+from google.cloud import secretmanager
 from omegaconf import DictConfig
 from pytorch_lightning import Trainer
+from pytorch_lightning.loggers import WandbLogger
 
 from src.data.dataset import DesasterTweetDataModule
 from src.models.model import MegaCoolTransformer
@@ -16,6 +18,15 @@ from src.models.model import MegaCoolTransformer
 def main(config: DictConfig):
     logger = logging.getLogger(__name__)
     logger.info("Start Training...")
+    client = secretmanager.SecretManagerServiceClient()
+
+    response = client.access_secret_version(request={"name": "WANDB"})
+    os.environ["WANDB_API_KEY"] = response.payload.data.decode("utf-8")
+
+    wandb_logger = WandbLogger(
+        project="test-project",
+    )
+
     gpus = 0
     if torch.cuda.is_available():
         # selects all available gpus
@@ -30,7 +41,7 @@ def main(config: DictConfig):
     )
     model = MegaCoolTransformer(config)
 
-    trainer = Trainer(max_epochs=2, gpus=gpus)
+    trainer = Trainer(max_epochs=2, gpus=gpus, logger=wandb_logger)
     trainer.fit(model, data_module)
     trainer.test(model, data_module)
 
