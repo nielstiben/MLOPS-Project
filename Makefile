@@ -38,6 +38,10 @@ build_features: requirements
 train: requirements
 	$(PYTHON_INTERPRETER) src/models/train_model.py
 
+## Predict
+predict: requirements
+	$(PYTHON_INTERPRETER) src/models/predict_model.py
+
 ## Docker
 docker-local: requirements
 	$(DOCKER ) build -f trainer-local.dockerfile . -t trainer:latest
