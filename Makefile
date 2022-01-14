@@ -9,6 +9,7 @@ BUCKET = [OPTIONAL] your-bucket-for-syncing-data (do not include 's3://')
 PROFILE = default
 PROJECT_NAME = mlops-nlp-project
 PYTHON_INTERPRETER = python3
+DOCKER = docker
 
 ifeq (,$(shell which conda))
 HAS_CONDA=False
@@ -36,6 +37,10 @@ build_features: requirements
 ## Train
 train: requirements
 	$(PYTHON_INTERPRETER) src/models/train_model.py
+
+## Docker
+docker-local: requirements
+	$(DOCKER ) build -f trainer-local.dockerfile . -t trainer:latest
 
 ## Delete all compiled Python files
 clean:
