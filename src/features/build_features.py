@@ -33,14 +33,17 @@ def main(cfg: DictConfig) -> None:
     )
     split_train = math.floor(len(data) * (c.split_train / 100))
     split_eval = math.floor(len(data) * ((c.split_train + c.split_eval) / 100))
-    tweet_train, label_train = list(data.text[:split_train]), list(
-        data.target[:split_train]
+    tweet_train, label_train = (
+        list(data.text[:split_train]),
+        list(data.target[:split_train]),
     )
-    tweet_eval, label_eval = list(data.text[split_train:split_eval]), list(
-        data.target[split_train:split_eval]
+    tweet_eval, label_eval = (
+        list(data.text[split_train:split_eval]),
+        list(data.target[split_train:split_eval]),
     )
-    tweet_test, lable_test = list(data.text[split_eval:]), list(
-        data.target[split_eval:]
+    tweet_test, lable_test = (
+        list(data.text[split_eval:]),
+        list(data.target[split_eval:]),
     )
 
     # %% Encode

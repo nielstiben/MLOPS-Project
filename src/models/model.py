@@ -1,7 +1,12 @@
 import torch
 from omegaconf import DictConfig
 from pytorch_lightning import LightningModule
-from transformers import BertForSequenceClassification
+
+# fmt: off # isort:skip
+from transformers import (  # isort:skip
+    BertForSequenceClassification,  # isort:skip
+    DistilBertForSequenceClassification,  # isort:skip
+)  # isort:skip
 
 
 class MegaCoolTransformer(LightningModule):
@@ -9,12 +14,20 @@ class MegaCoolTransformer(LightningModule):
         super().__init__()
         self.config = config
 
-        self.model = BertForSequenceClassification.from_pretrained(
-            self.config.model["pretrained-model"],
-            num_labels=self.config.model["num_labels"],
-            output_attentions=False,
-            output_hidden_states=False,
-        )
+        if self.config.model["model"] == "bert":
+            self.model = BertForSequenceClassification.from_pretrained(
+                self.config.model["pretrained-model"],
+                num_labels=self.config.model["num_labels"],
+                output_attentions=False,
+                output_hidden_states=False,
+            )
+        else:  # default model is distilbert
+            self.model = DistilBertForSequenceClassification.from_pretrained(
+                self.config.model["pretrained-model"],
+                num_labels=self.config.model["num_labels"],
+                output_attentions=False,
+                output_hidden_states=False,
+            )
 
     def forward(self, inputs):
         return self.model(inputs)
