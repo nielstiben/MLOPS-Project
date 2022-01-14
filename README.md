@@ -1,3 +1,7 @@
+[![Flake8 test](https://github.com/nielstiben/MLOPS-Project/actions/workflows/flake8.yml/badge.svg)](https://github.com/nielstiben/MLOPS-Project/actions/workflows/flake8.yml)
+[![Run tests](https://github.com/nielstiben/MLOPS-Project/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/nielstiben/MLOPS-Project/actions/workflows/tests.yml)
+[![isort test](https://github.com/nielstiben/MLOPS-Project/actions/workflows/isort.yml/badge.svg)](https://github.com/nielstiben/MLOPS-Project/actions/workflows/isort.yml)
+
 # MLOPS project description - Natural Language Processing with Disaster Tweets
 
 Niels Tiben s203131 \

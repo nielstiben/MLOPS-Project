@@ -59,9 +59,9 @@ point on the checklist for the exam.
 
 ### Week 2
 
-- [ ] Write unit tests related to the data part of your code -> (github skips data ones because it does not have it)
-- [ ] Write unit tests related to model construction
-- [ ] Calculate the coverage.
+- [X] Write unit tests related to the data part of your code
+- [X] Write unit tests related to model construction
+- [X] Calculate the coverage.
 - [X] Get some continues integration running on the github repository
 - [X] (optional) Create a new project on `gcp` and invite all group members to it
 - [X] Create a data storage on `gcp` for you data
