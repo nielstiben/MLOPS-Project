@@ -1,5 +1,5 @@
 steps:
    - name: 'gcr.io/cloud-builders/docker'
-     args: ['build', '-t', '-f', 'trainer_cloud.dockerfile', 'gcr.io/dtu-mlops-project/trainer:latest', '.']
+     args: ['build', '-f', 'trainer_cloud.dockerfile', '-t',  'gcr.io/dtu-mlops-project/trainer:latest', '.']
    - name: 'gcr.io/cloud-builders/docker'
      args: ['push', 'gcr.io/dtu-mlops-project/trainer:latest']
