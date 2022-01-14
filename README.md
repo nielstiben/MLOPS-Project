@@ -1,3 +1,7 @@
+[![Flake8 test](https://github.com/nielstiben/MLOPS-Project/actions/workflows/flake8.yml/badge.svg)](https://github.com/nielstiben/MLOPS-Project/actions/workflows/flake8.yml)
+[![Run tests](https://github.com/nielstiben/MLOPS-Project/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/nielstiben/MLOPS-Project/actions/workflows/tests.yml)
+[![isort test](https://github.com/nielstiben/MLOPS-Project/actions/workflows/isort.yml/badge.svg)](https://github.com/nielstiben/MLOPS-Project/actions/workflows/isort.yml)
+
 # MLOPS project description - Natural Language Processing with Disaster Tweets
 
 Niels Tiben s203131 \
@@ -19,7 +23,6 @@ We intend to use pre-trained models due to limited time, and also train the mode
 
 We might as well look into [ALBERT](https://huggingface.co/docs/transformers/model_doc/albert) and [DistilBERT](https://huggingface.co/docs/transformers/model_doc/distilbert) models, which optimize the BERT model and make the training process faster. That would be beneficial for us due to time constraints.
 
-[![Run tests](https://github.com/nielstiben/MLOPS-Project/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/nielstiben/MLOPS-Project/actions/workflows/tests.yml)
 
 ## Checklist
 See [CHECKLIST.md](https://github.com/nielstiben/MLOPS-Project/blob/main/CHECKLIST.md)
