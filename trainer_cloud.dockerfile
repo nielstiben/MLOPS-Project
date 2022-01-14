@@ -10,18 +10,6 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 
 WORKDIR /root
 
-COPY requirements.txt /tmp/requirements.txt
-COPY setup.py setup.py
-COPY src/ src/
-COPY .git/ .git/
-COPY .dvc/config .dvc/config
-COPY .dvc/plots .dvc/plots
-COPY config/ config/
-COPY data/processed.dvc data/processed.dvc
-
-RUN python3.9 -m pip install -r /tmp/requirements.txt --no-cache-dir
-RUN pip install dvc 'dvc[gs]'
-
 RUN wget -nv \
     https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz && \
     mkdir /root/tools && \
@@ -40,5 +28,18 @@ ENV PATH $PATH:/root/tools/google-cloud-sdk/bin
 # Make sure gsutil will use the default service account
 RUN echo '[GoogleCompute]\nservice_account = default' > /etc/boto.cfg
 
+RUN pip install dvc 'dvc[gs]'
+
+COPY requirements.txt /tmp/requirements.txt
+COPY setup.py setup.py
+COPY src/ src/
+
+RUN python3.9 -m pip install -r /tmp/requirements.txt --no-cache-dir
+
+COPY .git/ .git/
+COPY .dvc/config .dvc/config
+COPY .dvc/plots .dvc/plots
+COPY data/processed.dvc data/processed.dvc
+COPY config/ config/
 COPY docker_run_training.sh docker_run_training.sh
 ENTRYPOINT ["./docker_run_training.sh"]
