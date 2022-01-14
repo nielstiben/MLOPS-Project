@@ -2,7 +2,7 @@ name: "Run tests"
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [ master, main, github_actions_dvc ]
   pull_request:
     branches: [ master, main ]
 
@@ -20,11 +20,20 @@ jobs:
       with:
         python-version: 3.9
         cache: 'pip'
+    - id: 'auth'
+      name: 'Authenticate to Google Cloud'
+      uses: 'google-github-actions/auth@v0'
+      with:
+        credentials_json: '${{ secrets.GCP }}'
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install -r requirements_tests.txt
+        pip install dvc 'dvc[gs]'
+    - name: Pull data
+      run: |
+        dvc pull
     - name: Test with pytest
       run: |
         pip install pytest
