@@ -27,7 +27,7 @@ def main(config: DictConfig):
     response = client.access_secret_version(name=resource_name)
     api_key = response.payload.data.decode("UTF-8")
     os.environ["WANDB_API_KEY"] = api_key
-    wandb.init(project="dtu-mlops-project", config=config)
+    wandb.init(project="NLP-BERT", config=config)
 
     gpus = 0
     if torch.cuda.is_available():
