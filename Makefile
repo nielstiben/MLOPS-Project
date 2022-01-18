@@ -63,7 +63,7 @@ run_on_cloud:
   		--region europe-west4 \
   		--master-image-uri gcr.io/dtu-mlops-project/trainer:$(GIT_HASH) \
   		--scale-tier=custom --master-machine-type=standard_v100 \
-  		--
+  		--service-account python@dtu-mlops-project.iam.gserviceaccount.com \
 	$(info Run image: gcr.io/dtu-mlops-project/trainer:$(GIT_HASH))
 	gcloud ai-platform jobs describe trainig_$(GIT_HASH)
 
