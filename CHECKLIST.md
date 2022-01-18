@@ -65,8 +65,8 @@ point on the checklist for the exam.
 - [X] Get some continues integration running on the github repository
 - [X] (optional) Create a new project on `gcp` and invite all group members to it
 - [X] Create a data storage on `gcp` for you data
-- [ ] Create a trigger workflow for automatically building your docker images
-- [ ] Get your model training on `gcp` -> (training without GPU currently)
+- [X] Create a trigger workflow for automatically building your docker images
+- [X] Get your model training on `gcp` -> (training without GPU currently)
 - [ ] Play around with distributed data loading
 - [ ] (optional) Play around with distributed model training
 - [ ] Play around with quantization and compilation for you trained models
@@ -76,8 +76,8 @@ point on the checklist for the exam.
 - [ ] Deployed your model locally using TorchServe
 - [ ] Checked how robust your model is towards data drifting
 - [ ] Deployed your model using `gcp`
-- [ ] Monitored the system of your deployed model
-- [ ] Monitored the performance of your deployed model
+- [X] Monitored the system of your deployed model
+- [X] Monitored the performance of your deployed model
 
 ### Additional
 
@@ -85,7 +85,7 @@ point on the checklist for the exam.
 - [ ] Make sure all group members have a understanding about all parts of the project
 - [ ] Create a presentation explaining your project
 - [ ] Uploaded all your code to github
-- [ ] (extra) Implemented pre-commit hooks for your project repository
+- [X] (extra) Implemented pre-commit hooks for your project repository
 - [ ] (extra) Used Optuna to run hyperparameter optimization on your model
 
 ## Exam and Presentation
