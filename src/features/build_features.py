@@ -5,12 +5,14 @@ import os
 from pathlib import Path
 
 import hydra
+import nltk
 import numpy as np
 import pandas as pd  # type: ignore
 import torch
 from dotenv import find_dotenv, load_dotenv
 from omegaconf import DictConfig
 from transformers import AutoTokenizer
+from tweet_cleaner import clean_tweet_list
 
 # See kaggle notebook:
 # https://www.kaggle.com/gunesevitan/nlp-with-disaster-tweets-eda-cleaning-and-bert
@@ -45,6 +47,13 @@ def main(cfg: DictConfig) -> None:
         list(data.text[split_eval:]),
         list(data.target[split_eval:]),
     )
+
+    # %% Clean
+    nltk.download("wordnet")
+    nltk.download("omw-1.4")
+    tweet_train = clean_tweet_list(tweet_train)
+    tweet_test = clean_tweet_list(tweet_test)
+    tweet_eval = clean_tweet_list(tweet_eval)
 
     # %% Encode
     tokenizer = AutoTokenizer.from_pretrained(cfg.model["pretrained-model"])

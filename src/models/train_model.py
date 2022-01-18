@@ -44,7 +44,7 @@ def main(config: DictConfig):
     model = MegaCoolTransformer(config)
 
     trainer = Trainer(
-        max_epochs=5,
+        max_epochs=config.train.epochs,
         gpus=gpus,
         logger=pl.loggers.WandbLogger(project="mlops-mnist", config=config),
     )

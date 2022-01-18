@@ -1,4 +1,4 @@
 [flake8]
 exclude = venv
-ignore = W503 #line break occurred before binary operation
+ignore = W503,W605 #line break occurred before binary operation
 max-line-length = 100
