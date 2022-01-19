@@ -41,6 +41,7 @@ def main(config: DictConfig):
         os.path.join(hydra.utils.get_original_cwd(), config.data.path),
         batch_size=config.train.batch_size,
     )
+    data_module.setup()
     model = MegaCoolTransformer(config)
 
     trainer = Trainer(
@@ -51,8 +52,11 @@ def main(config: DictConfig):
         check_val_every_n_epoch=1,
         gradient_clip_val=1.0,
     )
-    trainer.fit(model, data_module)
-    trainer.test(model, data_module)
+    trainer.fit(
+        model,
+        train_dataloader=data_module.train_dataloader(),
+        val_dataloaders=data_module.test_dataloader(),
+    )
 
 
 if __name__ == "__main__":

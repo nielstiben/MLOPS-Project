@@ -5,7 +5,6 @@ from pytorch_lightning import LightningModule
 # fmt: off # isort:skip
 from transformers import (  # isort:skip
     BertForSequenceClassification,  # isort:skip
-    DistilBertForSequenceClassification,  # isort:skip
 )  # isort:skip
 
 
@@ -13,54 +12,62 @@ class MegaCoolTransformer(LightningModule):
     def __init__(self, config: DictConfig):
         super().__init__()
         self.config = config
+        self.model = BertForSequenceClassification.from_pretrained(
+            self.config.model["pretrained-model"]
+        )
 
-        if self.config.model["model"] == "bert":
-            self.model = BertForSequenceClassification.from_pretrained(
-                self.config.model["pretrained-model"],
-                num_labels=self.config.model["num_labels"],
-                output_attentions=False,
-                output_hidden_states=False,
-            )
-        elif (
-            self.config.model["model"] == "distilbert-base-uncased"
-        ):  # default model is distilbert
-            print("Using DistilBert")
-            self.model = DistilBertForSequenceClassification.from_pretrained(
-                self.config.model["pretrained-model"],
-                num_labels=self.config.model["num_labels"],
-            )
-
-    def forward(self, inputs):
-        return self.model(inputs)
+    def forward(self, batch):
+        b_input_ids = batch[0]
+        b_input_mask = batch[1]
+        return self.model(b_input_ids, token_type_ids=None, attention_mask=b_input_mask)
 
     def training_step(self, batch, batch_idx):
-        tweet, labels = batch
-        rtn = self.model(tweet, labels=labels)
-        loss = rtn["loss"]
+        b_input_ids = batch[0]
+        b_input_mask = batch[1]
+        b_labels = batch[2]
+        outputs = self.model(
+            b_input_ids,
+            token_type_ids=None,
+            attention_mask=b_input_mask,
+            labels=b_labels,
+        )
+        loss = outputs["loss"]
         self.log("train_loss", loss)
         return loss
 
-    def test_step(self, batch, batch_idx):
-        tweet, labels = batch
-        out = self(tweet)
-        logits = out["logits"]
-        preds = torch.argmax(logits, dim=1)
-        correct = (preds == labels).sum()
-        accuracy = correct / len(labels)
-        self.log("test_accuracy", accuracy, prog_bar=True)
+    # def test_step(self, batch, batch_idx):
+    #     b_input_ids = batch[0]
+    #     b_input_mask = batch[1]
+    #     b_labels = batch[2]
+    #     out = self.model(b_input_ids,
+    #                          token_type_ids=None,
+    #                          attention_mask=b_input_mask,
+    #                          labels=b_labels)
+    #     logits = out["logits"]
+    #     preds = torch.argmax(logits, dim=1)
+    #     correct = (preds == b_labels).sum()
+    #     accuracy = correct / len(b_labels)
+    #     self.log("test_accuracy", accuracy, prog_bar=True)
 
     def validation_step(self, batch, batch_idx, dataloader_idx=0):
-        tweets, labels = batch
-        outputs = self.model(tweets, labels=labels)
+        b_input_ids = batch[0]
+        b_input_mask = batch[1]
+        b_labels = batch[2]
+        outputs = self.model(
+            b_input_ids,
+            token_type_ids=None,
+            attention_mask=b_input_mask,
+            labels=b_labels,
+        )
         val_loss = outputs["loss"]
         logits = outputs["logits"]
         preds = torch.argmax(logits, dim=1)
-        correct = (preds == labels).sum()
-        accuracy = correct / len(labels)
+        correct = (preds == b_labels).sum()
+        accuracy = correct / len(b_labels)
         self.log("val_loss", val_loss, prog_bar=True)
         self.log("val_accuracy", accuracy, prog_bar=True)
 
-        return {"loss": val_loss, "preds": preds, "labels": labels}
+        return {"loss": val_loss, "preds": preds, "labels": b_labels}
 
     def setup(self, stage=None) -> None:
         pass

@@ -11,3 +11,4 @@ transformers==4.15.0
 google-cloud-secret-manager==2.5.0
 wandb==0.12.9
 nltk==3.6.7
+scikit-learn==1.0.2

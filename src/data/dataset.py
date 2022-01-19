@@ -11,19 +11,23 @@ from torch.utils.data.dataset import Dataset
 class DesasterTweets(Dataset):
     def __init__(self, path: str, type: str = "train") -> None:
         if type == "train":
-            file_tweets = os.path.join(path, "tweets_train.pkl")
-            file_labels = os.path.join(path, "label_train.pkl")
+            file_tweets = os.path.join(path, "train_inputs.pkl")
+            file_labels = os.path.join(path, "train_labels.pkl")
+            file_masks = os.path.join(path, "train_masks.pkl")
         elif type == "test":
-            file_tweets = os.path.join(path, "tweets_test.pkl")
-            file_labels = os.path.join(path, "label_test.pkl")
-        elif type == "eval":
-            file_tweets = os.path.join(path, "tweets_eval.pkl")
-            file_labels = os.path.join(path, "label_eval.pkl")
+            file_tweets = os.path.join(path, "validation_inputs.pkl")
+            file_labels = os.path.join(path, "validation_labels.pkl")
+            file_masks = os.path.join(path, "validation_masks.pkl")
+        # elif type == "eval":
+        #     file_tweets = os.path.join(path, "eval_inputs.pkl")
+        #     # file_labels = os.path.join(path, "eval_labels.pkl")
+        #     file_masks = os.path.join(path, "eval_masks.pkl")
         else:
             raise Exception(f"Unknown Dataset type: {type}")
 
         self.tweets = torch.load(file_tweets)
         self.labels = torch.load(file_labels)
+        self.masks = torch.load(file_masks)
 
         assert len(self.tweets) == len(
             self.labels
@@ -32,8 +36,12 @@ class DesasterTweets(Dataset):
     def __len__(self) -> int:
         return len(self.tweets)
 
-    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
-        return self.tweets[idx], self.labels[idx]
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        return (
+            self.tweets[idx],
+            self.masks[idx],
+            self.labels[idx],
+        )
 
 
 class DesasterTweetDataModule(pl.LightningDataModule):
@@ -50,7 +58,7 @@ class DesasterTweetDataModule(pl.LightningDataModule):
     def setup(self, stage: Optional[str] = None) -> None:
         self.trainset = DesasterTweets(self.data_path, "train")
         self.testset = DesasterTweets(self.data_path, "test")
-        self.valset = DesasterTweets(self.data_path, "eval")
+        # self.valset = DesasterTweets(self.data_path, "eval")
 
     def train_dataloader(self) -> DataLoader:
         return DataLoader(
@@ -62,7 +70,7 @@ class DesasterTweetDataModule(pl.LightningDataModule):
             self.testset, batch_size=self.batch_size, num_workers=self.cpu_cnt
         )
 
-    def val_dataloader(self) -> DataLoader:
-        return DataLoader(
-            self.valset, batch_size=self.batch_size, num_workers=self.cpu_cnt
-        )
+    # def val_dataloader(self) -> DataLoader:
+    #     return DataLoader(
+    #         self.valset, batch_size=self.batch_size, num_workers=self.cpu_cnt
+    #     )

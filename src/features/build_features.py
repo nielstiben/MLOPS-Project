@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import logging
-import math
 import os
 from pathlib import Path
 
@@ -11,6 +10,7 @@ import pandas as pd  # type: ignore
 import torch
 from dotenv import find_dotenv, load_dotenv
 from omegaconf import DictConfig
+from sklearn.model_selection import train_test_split
 from transformers import AutoTokenizer
 from tweet_cleaner import clean_tweet_list
 
@@ -30,61 +30,85 @@ def main(cfg: DictConfig) -> None:
 
     # %% Fetch Data
     data_path = os.path.join(hydra.utils.get_original_cwd(), c.path, "interim")
-    data = pd.read_csv(
+
+    train = pd.read_csv(
         os.path.join(data_path, "train.csv"), dtype={"id": np.int16, "target": np.int8}
     )
-    split_train = math.floor(len(data) * (c.split_train / 100))
-    split_eval = math.floor(len(data) * ((c.split_train + c.split_eval) / 100))
-    tweet_train, label_train = (
-        list(data.text[:split_train]),
-        list(data.target[:split_train]),
+    test = pd.read_csv(
+        os.path.join(data_path, "test.csv"), dtype={"id": np.int16, "target": np.int8}
     )
-    tweet_eval, label_eval = (
-        list(data.text[split_train:split_eval]),
-        list(data.target[split_train:split_eval]),
-    )
-    tweet_test, lable_test = (
-        list(data.text[split_eval:]),
-        list(data.target[split_eval:]),
-    )
+
+    df_train = train
+    df_test = test
 
     # %% Clean
     nltk.download("wordnet")
     nltk.download("omw-1.4")
-    tweet_train = clean_tweet_list(tweet_train)
-    tweet_test = clean_tweet_list(tweet_test)
-    tweet_eval = clean_tweet_list(tweet_eval)
+    df_train["text"] = clean_tweet_list(list(df_train.text))
+    df_test["text"] = clean_tweet_list(list(df_test.text))
+    df_train = df_train[df_train["text"] != ""]
+    df_test = df_test[df_test["text"] != ""]
+    df_train = df_train[["text", "target"]]
+
+    texts_eval = df_test.text.values
+
+    texts = df_train.text.values
+    labels = df_train.target.values
 
     # %% Encode
     tokenizer = AutoTokenizer.from_pretrained(cfg.model["pretrained-model"])
 
-    def encode(text: str) -> list[int]:
-        tokens = tokenizer.encode(text)
-        tokens = tokens[: c.max_sequence_length - 2]
-        pad_len = c.max_sequence_length - len(tokens)
-        tokens += [0] * pad_len
-        return tokens
+    indices = tokenizer.batch_encode_plus(
+        list(texts),
+        max_length=64,
+        add_special_tokens=True,
+        return_attention_mask=True,
+        pad_to_max_length=True,
+        truncation=True,
+    )
+    indices_eval = tokenizer.batch_encode_plus(
+        list(texts_eval),
+        max_length=64,
+        add_special_tokens=True,
+        return_attention_mask=True,
+        pad_to_max_length=True,
+        truncation=True,
+    )
 
-    X_train = list(map(encode, list(tweet_train)))
-    X_eval = list(map(encode, list(tweet_eval)))
-    X_test = list(map(encode, list(tweet_test)))
+    input_ids_eval = indices_eval["input_ids"]
+    attention_masks_eval = indices_eval["attention_mask"]
+
+    input_ids = indices["input_ids"]
+    attention_masks = indices["attention_mask"]
+
+    train_inputs, validation_inputs, train_labels, validation_labels = train_test_split(
+        input_ids, labels, random_state=42, test_size=0.1
+    )
+
+    train_masks, validation_masks, _, _ = train_test_split(
+        attention_masks, labels, random_state=42, test_size=0.1
+    )
 
     # %% Convert to tensor
-    X_train_t = torch.IntTensor(X_train)
-    y_train_t = torch.IntTensor(label_train).long()
-    X_eval_t = torch.IntTensor(X_eval)
-    y_eval_t = torch.IntTensor(label_eval).long()
-    X_test_t = torch.IntTensor(X_test)
-    y_test_t = torch.IntTensor(lable_test).long()
+    train_inputs = torch.tensor(train_inputs)
+    validation_inputs = torch.tensor(validation_inputs)
+    train_labels = torch.tensor(train_labels, dtype=torch.long)
+    validation_labels = torch.tensor(validation_labels, dtype=torch.long)
+    train_masks = torch.tensor(train_masks, dtype=torch.long)
+    validation_masks = torch.tensor(validation_masks, dtype=torch.long)
+    eval_inputs = torch.tensor(input_ids_eval)
+    eval_masks = torch.tensor(attention_masks_eval, dtype=torch.long)
 
     # %% Save to file
     data_path = os.path.join(hydra.utils.get_original_cwd(), c.path, "processed")
-    torch.save(X_train_t, os.path.join(data_path, "tweets_train.pkl"))
-    torch.save(y_train_t, os.path.join(data_path, "label_train.pkl"))
-    torch.save(X_eval_t, os.path.join(data_path, "tweets_eval.pkl"))
-    torch.save(y_eval_t, os.path.join(data_path, "label_eval.pkl"))
-    torch.save(X_test_t, os.path.join(data_path, "tweets_test.pkl"))
-    torch.save(y_test_t, os.path.join(data_path, "label_test.pkl"))
+    torch.save(train_inputs, os.path.join(data_path, "train_inputs.pkl"))
+    torch.save(train_labels, os.path.join(data_path, "train_labels.pkl"))
+    torch.save(validation_inputs, os.path.join(data_path, "validation_inputs.pkl"))
+    torch.save(validation_labels, os.path.join(data_path, "validation_labels.pkl"))
+    torch.save(train_masks, os.path.join(data_path, "train_masks.pkl"))
+    torch.save(validation_masks, os.path.join(data_path, "validation_masks.pkl"))
+    torch.save(eval_inputs, os.path.join(data_path, "eval_inputs.pkl"))
+    torch.save(eval_masks, os.path.join(data_path, "eval_masks.pkl"))
     logger.info("Finished! Output saved to '{}'".format(data_path))
 
 

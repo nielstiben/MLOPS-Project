@@ -1,4 +1,4 @@
 model: 'bert'
 #model: 'distilbert'
-pretrained-model: 'distilbert-base-uncased'
+pretrained-model: 'bert-large-uncased'
 num_labels: 2
