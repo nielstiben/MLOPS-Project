@@ -18,9 +18,9 @@ def test_distil_model_output_shape():
         cfg.model["model"] = "distilbert"
         model = MegaCoolTransformer(cfg)
         x = torch.randint(0, 1000, (5, 140))
-        output = model(x).logits
+        (logits,) = model(x)
 
-        assert output.shape == torch.Size([5, 2])
+        assert logits.shape == torch.Size([5, 2])
 
 
 @pytest.mark.skipif(
