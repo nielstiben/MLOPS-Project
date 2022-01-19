@@ -21,13 +21,10 @@ class MegaCoolTransformer(LightningModule):
                 output_attentions=False,
                 output_hidden_states=False,
             )
-        elif (
-            self.config.model["model"] == "distilbert-base-uncased"
-        ):  # default model is distilbert
+        else:  # default model is distilbert
             print("Using DistilBert")
             self.model = DistilBertForSequenceClassification.from_pretrained(
-                self.config.model["pretrained-model"],
-                num_labels=self.config.model["num_labels"],
+                "distilbert-base-uncased", num_labels=self.config.model["num_labels"],
             )
 
     def forward(self, inputs):
