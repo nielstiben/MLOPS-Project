@@ -1,5 +1,8 @@
 optimizer: AdamW
 lr: 6e-6
-eps: 1e-8,
+eps: 1e-8
 batch_size: 16
 epochs: 5
+scheduler:
+  name: ExponentialLR
+  gamma: 0.1

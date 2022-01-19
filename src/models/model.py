@@ -68,8 +68,8 @@ class MegaCoolTransformer(LightningModule):
         if self.config.train["optimizer"] == "AdamW":
             optimizer = torch.optim.AdamW(
                 self.parameters(),
-                lr=self.config.train["lr"],
-                eps=self.config.train["eps"],
+                lr=float(self.config.train["lr"]),
+                eps=float(self.config.train["eps"]),
                 betas=(0.9, 0.999),
             )  # type: torch.optim.Optimizer
         elif self.config.train["optimizer"] == "Adam":
