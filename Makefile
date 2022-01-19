@@ -40,6 +40,10 @@ build_features: requirements
 train: requirements
 	$(PYTHON_INTERPRETER) src/models/train_model.py
 
+## Predict
+predict: requirements
+	$(PYTHON_INTERPRETER) src/models/predict_model.py
+
 ## Docker
 docker-local:
 	$(DOCKER) build -f trainer-local.dockerfile . -t trainer:latest
@@ -59,8 +63,9 @@ run_on_cloud:
   		--region europe-west4 \
   		--master-image-uri gcr.io/dtu-mlops-project/trainer:$(GIT_HASH) \
   		--scale-tier=custom --master-machine-type=standard_v100 \
-  		--
+  		--service-account python@dtu-mlops-project.iam.gserviceaccount.com \
 	$(info Run image: gcr.io/dtu-mlops-project/trainer:$(GIT_HASH))
+	@sleep 3
 	gcloud ai-platform jobs describe trainig_$(GIT_HASH)
 
 build_and_run_cloud: build_docker_cloud run_on_cloud

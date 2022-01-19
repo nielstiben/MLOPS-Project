@@ -20,6 +20,7 @@ class MegaCoolTransformer(LightningModule):
                 num_labels=self.config.model["num_labels"],
                 output_attentions=False,
                 output_hidden_states=False,
+                torchscript=True,
             )
         else:  # default model is distilbert
             self.model = DistilBertForSequenceClassification.from_pretrained(
@@ -27,6 +28,7 @@ class MegaCoolTransformer(LightningModule):
                 num_labels=self.config.model["num_labels"],
                 output_attentions=False,
                 output_hidden_states=False,
+                torchscript=True,
             )
 
     def forward(self, inputs):
@@ -34,15 +36,13 @@ class MegaCoolTransformer(LightningModule):
 
     def training_step(self, batch, batch_idx):
         tweet, labels = batch
-        rtn = self.model(tweet, labels=labels)
-        loss = rtn["loss"]
+        loss, _ = self.model(tweet, labels=labels)
         self.log("train_loss", loss)
         return loss
 
     def test_step(self, batch, batch_idx):
         tweet, labels = batch
-        out = self(tweet)
-        logits = out["logits"]
+        (logits,) = self(tweet)
         preds = torch.argmax(logits, dim=1)
         correct = (preds == labels).sum()
         accuracy = correct / len(labels)
@@ -50,9 +50,7 @@ class MegaCoolTransformer(LightningModule):
 
     def validation_step(self, batch, batch_idx, dataloader_idx=0):
         tweets, labels = batch
-        outputs = self.model(tweets, labels=labels)
-        val_loss = outputs["loss"]
-        logits = outputs["logits"]
+        val_loss, logits = self.model(tweets, labels=labels)
         preds = torch.argmax(logits, dim=1)
         correct = (preds == labels).sum()
         accuracy = correct / len(labels)
@@ -136,3 +134,9 @@ class MegaCoolTransformer(LightningModule):
             raise ValueError("Unknown scheduler")
 
         return [optimizer], [scheduler]
+
+    def save_jit(self, file: str = "deployable_model.pt") -> None:
+        tokens_tensor = torch.Tensor(1, 140).int()
+        self.model.eval()
+        script_model = torch.jit.trace(self.model, [tokens_tensor])
+        script_model.save(file)
