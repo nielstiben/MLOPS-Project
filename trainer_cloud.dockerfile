@@ -16,10 +16,9 @@ RUN pip install dvc 'dvc[gs]'
 
 COPY requirements.txt /tmp/requirements.txt
 COPY setup.py setup.py
-COPY src/ src/
-
 RUN python3.9 -m pip install -r /tmp/requirements.txt --no-cache-dir
 
+COPY src/ src/
 COPY .git/ .git/
 COPY .dvc/config .dvc/config
 COPY .dvc/plots .dvc/plots

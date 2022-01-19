@@ -54,6 +54,8 @@ def main(config: DictConfig):
     trainer.fit(model, data_module)
     trainer.test(model, data_module)
 
+    model.save_jit()
+
 
 if __name__ == "__main__":
     log_fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
