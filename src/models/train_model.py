@@ -47,6 +47,9 @@ def main(config: DictConfig):
         max_epochs=config.train.epochs,
         gpus=gpus,
         logger=pl.loggers.WandbLogger(project="mlops-mnist", config=config),
+        val_check_interval=1.0,
+        check_val_every_n_epoch=1,
+        gradient_clip_val=1.0,
     )
     trainer.fit(model, data_module)
     trainer.test(model, data_module)

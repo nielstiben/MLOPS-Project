@@ -21,12 +21,13 @@ class MegaCoolTransformer(LightningModule):
                 output_attentions=False,
                 output_hidden_states=False,
             )
-        else:  # default model is distilbert
+        elif (
+            self.config.model["model"] == "distilbert-base-uncased"
+        ):  # default model is distilbert
+            print("Using DistilBert")
             self.model = DistilBertForSequenceClassification.from_pretrained(
                 self.config.model["pretrained-model"],
                 num_labels=self.config.model["num_labels"],
-                output_attentions=False,
-                output_hidden_states=False,
             )
 
     def forward(self, inputs):
@@ -69,7 +70,10 @@ class MegaCoolTransformer(LightningModule):
     ) -> tuple[list[torch.optim.Optimizer], list[object]]:
         if self.config.train["optimizer"] == "AdamW":
             optimizer = torch.optim.AdamW(
-                self.parameters(), lr=self.config.train["lr"]
+                self.parameters(),
+                lr=self.config.train["lr"],
+                eps=self.config.train["eps"],
+                betas=(0.9, 0.999),
             )  # type: torch.optim.Optimizer
         elif self.config.train["optimizer"] == "Adam":
             optimizer = torch.optim.Adam(self.parameters(), lr=self.config.train["lr"])
