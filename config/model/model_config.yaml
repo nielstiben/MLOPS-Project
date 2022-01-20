@@ -1,4 +1,4 @@
 model: 'bert'
-#model: 'distilbert'
-pretrained-model: 'distilbert-base-uncased'
+pretrained-model: 'bert-base-uncased'
 num_labels: 2
+max_sequence_length: 512

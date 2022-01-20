@@ -37,7 +37,9 @@ class MegaCoolTransformer(LightningModule):
 
     def training_step(self, batch, batch_idx):
         tweet, labels = batch
-        loss, _ = self.model(tweet, labels=labels)
+        loss, _ = self.model(
+            tweet[0], token_type_ids=None, attention_mask=tweet[1], labels=labels
+        )
         self.log("train_loss", loss)
         return loss
 
@@ -51,7 +53,9 @@ class MegaCoolTransformer(LightningModule):
 
     def validation_step(self, batch, batch_idx, dataloader_idx=0):
         tweets, labels = batch
-        val_loss, logits = self.model(tweets, labels=labels)
+        val_loss, logits = self.model(
+            tweets[0], attention_mask=tweets[1], labels=labels
+        )
         preds = torch.argmax(logits, dim=1)
         correct = (preds == labels).sum()
         accuracy = correct / len(labels)
