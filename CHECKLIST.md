@@ -67,7 +67,7 @@ point on the checklist for the exam.
 - [X] Create a data storage on `gcp` for you data
 - [X] Create a trigger workflow for automatically building your docker images
 - [X] Get your model training on `gcp` -> (training without GPU currently)
-- [ ] Play around with distributed data loading
+- [X] Play around with distributed data loading
 - [ ] (optional) Play around with distributed model training
 - [X] Play around with quantization and compilation for you trained models
 
@@ -82,8 +82,8 @@ point on the checklist for the exam.
 ### Additional
 
 - [ ] Revisit your initial project description. Did the project turn out as you wanted?
-- [ ] Make sure all group members have a understanding about all parts of the project
-- [ ] Create a presentation explaining your project
+- [X] Make sure all group members have a understanding about all parts of the project
+- [X] Create a presentation explaining your project
 - [X] Uploaded all your code to github
 - [X] (extra) Implemented pre-commit hooks for your project repository
 - [ ] (extra) Used Optuna to run hyperparameter optimization on your model
