@@ -1,5 +1,5 @@
 optimizer: AdamW
-lr: 6e-6
+lr: 6e-5
 eps: 1e-8
 batch_size: 16
 epochs: 20
