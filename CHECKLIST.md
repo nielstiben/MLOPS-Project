@@ -69,13 +69,13 @@ point on the checklist for the exam.
 - [X] Get your model training on `gcp` -> (training without GPU currently)
 - [ ] Play around with distributed data loading
 - [ ] (optional) Play around with distributed model training
-- [ ] Play around with quantization and compilation for you trained models
+- [X] Play around with quantization and compilation for you trained models
 
 ### Week 3
 
 - [ ] Deployed your model locally using TorchServe
 - [ ] Checked how robust your model is towards data drifting
-- [ ] Deployed your model using `gcp`
+- [X] Deployed your model using `gcp`
 - [X] Monitored the system of your deployed model
 - [X] Monitored the performance of your deployed model
 
@@ -84,7 +84,7 @@ point on the checklist for the exam.
 - [ ] Revisit your initial project description. Did the project turn out as you wanted?
 - [ ] Make sure all group members have a understanding about all parts of the project
 - [ ] Create a presentation explaining your project
-- [ ] Uploaded all your code to github
+- [X] Uploaded all your code to github
 - [X] (extra) Implemented pre-commit hooks for your project repository
 - [ ] (extra) Used Optuna to run hyperparameter optimization on your model
 

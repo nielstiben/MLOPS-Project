@@ -16,14 +16,14 @@ RUN pip install dvc 'dvc[gs]'
 
 COPY requirements.txt /tmp/requirements.txt
 COPY setup.py setup.py
-COPY src/ src/
-
 RUN python3.9 -m pip install -r /tmp/requirements.txt --no-cache-dir
 
+COPY src/ src/
 COPY .git/ .git/
 COPY .dvc/config .dvc/config
 COPY .dvc/plots .dvc/plots
 COPY data/processed.dvc data/processed.dvc
+COPY data/interim.dvc data/interim.dvc
 COPY config/ config/
 COPY docker_run_training.sh docker_run_training.sh
 ENTRYPOINT ["./docker_run_training.sh"]

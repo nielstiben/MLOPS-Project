@@ -58,6 +58,8 @@ def main(config: DictConfig):
         val_dataloaders=data_module.test_dataloader(),
     )
 
+    model.save_jit()
+
 
 if __name__ == "__main__":
     log_fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

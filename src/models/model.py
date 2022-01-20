@@ -13,7 +13,9 @@ class MegaCoolTransformer(LightningModule):
         super().__init__()
         self.config = config
         self.model = BertForSequenceClassification.from_pretrained(
-            self.config.model["pretrained-model"]
+            self.config.model["pretrained-model"],
+            torchscript=True,
+            num_labels=self.config.model["num_labels"],
         )
 
     def forward(self, batch):
@@ -25,42 +27,43 @@ class MegaCoolTransformer(LightningModule):
         b_input_ids = batch[0]
         b_input_mask = batch[1]
         b_labels = batch[2]
-        outputs = self.model(
+        (loss, _) = self.model(
             b_input_ids,
             token_type_ids=None,
             attention_mask=b_input_mask,
             labels=b_labels,
         )
-        loss = outputs["loss"]
         self.log("train_loss", loss)
         return loss
 
-    # def test_step(self, batch, batch_idx):
-    #     b_input_ids = batch[0]
-    #     b_input_mask = batch[1]
-    #     b_labels = batch[2]
-    #     out = self.model(b_input_ids,
-    #                          token_type_ids=None,
-    #                          attention_mask=b_input_mask,
-    #                          labels=b_labels)
-    #     logits = out["logits"]
-    #     preds = torch.argmax(logits, dim=1)
-    #     correct = (preds == b_labels).sum()
-    #     accuracy = correct / len(b_labels)
-    #     self.log("test_accuracy", accuracy, prog_bar=True)
+    def test_step(self, batch, batch_idx):
+        b_input_ids = batch[0]
+        b_input_mask = batch[1]
+        b_labels = batch[2]
+        (test_loss, logits) = self.model(
+            b_input_ids,
+            token_type_ids=None,
+            attention_mask=b_input_mask,
+            labels=b_labels,
+        )
+        preds = torch.argmax(logits, dim=1)
+        correct = (preds == b_labels).sum()
+        accuracy = correct / len(b_labels)
+        self.log("test_loss", test_loss, prog_bar=True)
+        self.log("test_accuracy", accuracy, prog_bar=True)
+
+        return {"loss": test_loss, "preds": preds, "labels": b_labels}
 
     def validation_step(self, batch, batch_idx, dataloader_idx=0):
         b_input_ids = batch[0]
         b_input_mask = batch[1]
         b_labels = batch[2]
-        outputs = self.model(
+        (val_loss, logits) = self.model(
             b_input_ids,
             token_type_ids=None,
             attention_mask=b_input_mask,
             labels=b_labels,
         )
-        val_loss = outputs["loss"]
-        logits = outputs["logits"]
         preds = torch.argmax(logits, dim=1)
         correct = (preds == b_labels).sum()
         accuracy = correct / len(b_labels)
@@ -147,3 +150,9 @@ class MegaCoolTransformer(LightningModule):
             raise ValueError("Unknown scheduler")
 
         return [optimizer], [scheduler]
+
+    def save_jit(self, file: str = "deployable_model.pt") -> None:
+        tokens_tensor = torch.Tensor(1, 140).int()
+        self.model.eval()
+        script_model = torch.jit.trace(self.model, [tokens_tensor])
+        script_model.save(file)
