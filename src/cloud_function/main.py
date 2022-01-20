@@ -24,21 +24,27 @@ nltk.download("omw-1.4")
 
 
 def encode(text: str) -> list[int]:
-    tokens = tokenizer.encode(text)
-    tokens = tokens[: 140 - 2]
-    pad_len = 140 - len(tokens)
-    tokens += [0] * pad_len
-    return tokens
+    indices = tokenizer.encode_plus(
+        text,
+        max_length=64,
+        add_special_tokens=True,
+        return_attention_mask=True,
+        pad_to_max_length=True,
+        truncation=True,
+    )
+    return indices["input_ids"], indices["attention_mask"]
 
 
 def predict(request):
     request_json = request.get_json()
     tweet = request_json["tweet"]
     tweet = clean_tweet(tweet)
-    tweet = encode(tweet)
+    tweet, mask = encode(tweet)
     tweet = torch.IntTensor(tweet)
+    mask = torch.LongTensor(mask)
     tweet.unsqueeze_(0)
-    (pred,) = model(tweet)
+    mask.unsqueeze_(0)
+    (pred,) = model(tweet, mask)
     pred = torch.argmax(pred, 1).item()
     if pred == 0:
         answer = "This is not a desaster tweet"
