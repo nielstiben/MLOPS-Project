@@ -60,7 +60,7 @@ def main(cfg: DictConfig) -> None:
 
     indices = tokenizer.batch_encode_plus(
         list(texts),
-        max_length=64,
+        max_length=c["max_sequence_length"],
         add_special_tokens=True,
         return_attention_mask=True,
         pad_to_max_length=True,
@@ -68,7 +68,7 @@ def main(cfg: DictConfig) -> None:
     )
     indices_eval = tokenizer.batch_encode_plus(
         list(texts_eval),
-        max_length=64,
+        max_length=c["max_sequence_length"],
         add_special_tokens=True,
         return_attention_mask=True,
         pad_to_max_length=True,
