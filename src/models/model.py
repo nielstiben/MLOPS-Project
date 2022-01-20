@@ -152,7 +152,8 @@ class MegaCoolTransformer(LightningModule):
         return [optimizer], [scheduler]
 
     def save_jit(self, file: str = "deployable_model.pt") -> None:
-        tokens_tensor = torch.Tensor(1, 140).int()
-        self.model.eval()
-        script_model = torch.jit.trace(self.model, [tokens_tensor])
+        token_len = self.config["build_features"]["max_sequence_length"]
+        tokens_tensor = torch.ones(1, token_len).long()
+        mask_tensor = torch.ones(1, token_len).float()
+        script_model = torch.jit.trace(self.model, [tokens_tensor, mask_tensor])
         script_model.save(file)
