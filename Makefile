@@ -66,7 +66,7 @@ run_on_cloud:
   		--service-account python@dtu-mlops-project.iam.gserviceaccount.com \
 	$(info Run image: gcr.io/dtu-mlops-project/trainer:$(GIT_HASH))
 	@sleep 3
-	gcloud ai-platform jobs describe trainig_$(GIT_HASH)
+	gcloud ai-platform jobs describe training_$(GIT_HASH)
 
 build_and_run_cloud: build_docker_cloud run_on_cloud
 
