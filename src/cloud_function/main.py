@@ -47,16 +47,16 @@ def predict(request):
     (pred,) = model(tweet, mask)
     pred = torch.argmax(pred, 1).item()
     if pred == 0:
-        answer = "This is not a desaster tweet"
+        answer = "This is not a disaster tweet"
         meme = "https://pyxis.nymag.com/v1/imgs/9ef/336/775d89db9c8ffcd8589f3acdf37d0e323f-25-this-is-fine-lede-new.2x.rhorizontal.w700.jpg"  # noqa: E501
     elif pred == 1:
-        answer = "This is a desaster tweet"
-        meme = "https://wwwcache.wral.com/asset/news/local/2021/02/12/19524364/viral-raleigh-snow-glenwood-meme-DMID1-5putzq7om-640x360.jpg"  # noqa: E501
+        answer = "This is a disaster tweet"
+        meme = "https://memegenerator.net/img/instances/57036215/this-is-a-fucking-disaster.jpg"  # noqa: E501
     else:
         answer = "error"
         meme = "error"
 
-    resp = {"prediction": pred, "answer": answer, "picutre": meme}
+    resp = {"prediction": pred, "answer": answer, "picture": meme}
     return resp
 
 
