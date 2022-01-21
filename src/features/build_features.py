@@ -25,7 +25,7 @@ def main(cfg: DictConfig) -> None:
     logger.info("Tokenize tweets")
     c = cfg.build_features
     assert (
-        c.split_train + c.split_test + c.split_eval == 100
+        c.split_train + c.split_test + c.split_eval == 1
     ), "The split train:{c.split_train} test:{c.split_test} is not possible"
 
     # %% Fetch Data
@@ -34,23 +34,19 @@ def main(cfg: DictConfig) -> None:
     train = pd.read_csv(
         os.path.join(data_path, "train.csv"), dtype={"id": np.int16, "target": np.int8}
     )
-    test = pd.read_csv(
-        os.path.join(data_path, "test.csv"), dtype={"id": np.int16, "target": np.int8}
-    )
+    # test = pd.read_csv(
+    #     os.path.join(data_path, "test.csv"), dtype={"id": np.int16, "target": np.int8}
+    # )
 
     df_train = train
-    df_test = test
+    # df_test = test
 
     # %% Clean
     nltk.download("wordnet")
     nltk.download("omw-1.4")
     df_train["text"] = clean_tweet_list(list(df_train.text))
-    df_test["text"] = clean_tweet_list(list(df_test.text))
     df_train = df_train[df_train["text"] != ""]
-    df_test = df_test[df_test["text"] != ""]
     df_train = df_train[["text", "target"]]
-
-    texts_eval = df_test.text.values
 
     texts = df_train.text.values
     labels = df_train.target.values
@@ -66,27 +62,29 @@ def main(cfg: DictConfig) -> None:
         pad_to_max_length=True,
         truncation=True,
     )
-    indices_eval = tokenizer.batch_encode_plus(
-        list(texts_eval),
-        max_length=c["max_sequence_length"],
-        add_special_tokens=True,
-        return_attention_mask=True,
-        pad_to_max_length=True,
-        truncation=True,
-    )
-
-    input_ids_eval = indices_eval["input_ids"]
-    attention_masks_eval = indices_eval["attention_mask"]
 
     input_ids = indices["input_ids"]
     attention_masks = indices["attention_mask"]
 
-    train_inputs, validation_inputs, train_labels, validation_labels = train_test_split(
-        input_ids, labels, random_state=42, test_size=0.1
+    train_inputs, rest_inputs, train_labels, rest_labels = train_test_split(
+        input_ids, labels, random_state=42, test_size=c.split_test + c.split_eval
+    )
+    validation_inputs, eval_inputs, validation_labels, eval_labels = train_test_split(
+        rest_inputs,
+        rest_labels,
+        random_state=42,
+        test_size=c.split_test / (c.split_test + c.split_eval),
     )
 
-    train_masks, validation_masks, _, _ = train_test_split(
-        attention_masks, labels, random_state=42, test_size=0.1
+    train_masks, rest_masks, _, rest_labels = train_test_split(
+        attention_masks, labels, random_state=42, test_size=c.split_test + c.split_eval
+    )
+
+    validation_masks, eval_masks, _, _ = train_test_split(
+        rest_masks,
+        rest_labels,
+        random_state=42,
+        test_size=c.split_test / (c.split_test + c.split_eval),
     )
 
     # %% Convert to tensor
@@ -94,10 +92,11 @@ def main(cfg: DictConfig) -> None:
     validation_inputs = torch.tensor(validation_inputs)
     train_labels = torch.tensor(train_labels, dtype=torch.long)
     validation_labels = torch.tensor(validation_labels, dtype=torch.long)
+    eval_inputs = torch.tensor(eval_inputs)
+    eval_labels = torch.tensor(eval_labels, dtype=torch.long)
     train_masks = torch.tensor(train_masks, dtype=torch.long)
     validation_masks = torch.tensor(validation_masks, dtype=torch.long)
-    eval_inputs = torch.tensor(input_ids_eval)
-    eval_masks = torch.tensor(attention_masks_eval, dtype=torch.long)
+    eval_masks = torch.tensor(eval_masks, dtype=torch.long)
 
     # %% Save to file
     data_path = os.path.join(hydra.utils.get_original_cwd(), c.path, "processed")
@@ -108,6 +107,7 @@ def main(cfg: DictConfig) -> None:
     torch.save(train_masks, os.path.join(data_path, "train_masks.pkl"))
     torch.save(validation_masks, os.path.join(data_path, "validation_masks.pkl"))
     torch.save(eval_inputs, os.path.join(data_path, "eval_inputs.pkl"))
+    torch.save(eval_labels, os.path.join(data_path, "eval_labels.pkl"))
     torch.save(eval_masks, os.path.join(data_path, "eval_masks.pkl"))
     logger.info("Finished! Output saved to '{}'".format(data_path))
 

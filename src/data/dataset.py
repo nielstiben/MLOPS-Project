@@ -18,10 +18,10 @@ class DesasterTweets(Dataset):
             file_tweets = os.path.join(path, "validation_inputs.pkl")
             file_labels = os.path.join(path, "validation_labels.pkl")
             file_masks = os.path.join(path, "validation_masks.pkl")
-        # elif type == "eval":
-        #     file_tweets = os.path.join(path, "eval_inputs.pkl")
-        #     # file_labels = os.path.join(path, "eval_labels.pkl")
-        #     file_masks = os.path.join(path, "eval_masks.pkl")
+        elif type == "eval":
+            file_tweets = os.path.join(path, "eval_inputs.pkl")
+            file_labels = os.path.join(path, "eval_labels.pkl")
+            file_masks = os.path.join(path, "eval_masks.pkl")
         else:
             raise Exception(f"Unknown Dataset type: {type}")
 
@@ -58,7 +58,7 @@ class DesasterTweetDataModule(pl.LightningDataModule):
     def setup(self, stage: Optional[str] = None) -> None:
         self.trainset = DesasterTweets(self.data_path, "train")
         self.testset = DesasterTweets(self.data_path, "test")
-        # self.valset = DesasterTweets(self.data_path, "eval")
+        self.valset = DesasterTweets(self.data_path, "eval")
 
     def train_dataloader(self) -> DataLoader:
         return DataLoader(
@@ -70,7 +70,7 @@ class DesasterTweetDataModule(pl.LightningDataModule):
             self.testset, batch_size=self.batch_size, num_workers=self.cpu_cnt
         )
 
-    # def val_dataloader(self) -> DataLoader:
-    #     return DataLoader(
-    #         self.valset, batch_size=self.batch_size, num_workers=self.cpu_cnt
-    #     )
+    def val_dataloader(self) -> DataLoader:
+        return DataLoader(
+            self.valset, batch_size=self.batch_size, num_workers=self.cpu_cnt
+        )
