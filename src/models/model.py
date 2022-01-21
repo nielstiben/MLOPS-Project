@@ -23,8 +23,9 @@ class MegaCoolTransformer(LightningModule):
                 torchscript=True,
             )
         else:  # default model is distilbert
+            print("Using DistilBert")
             self.model = DistilBertForSequenceClassification.from_pretrained(
-                self.config.model["pretrained-model"],
+                "distilbert-base-uncased",
                 num_labels=self.config.model["num_labels"],
                 output_attentions=False,
                 output_hidden_states=False,
@@ -36,7 +37,9 @@ class MegaCoolTransformer(LightningModule):
 
     def training_step(self, batch, batch_idx):
         tweet, labels = batch
-        loss, _ = self.model(tweet, labels=labels)
+        loss, _ = self.model(
+            tweet[0], token_type_ids=None, attention_mask=tweet[1], labels=labels
+        )
         self.log("train_loss", loss)
         return loss
 
@@ -50,7 +53,9 @@ class MegaCoolTransformer(LightningModule):
 
     def validation_step(self, batch, batch_idx, dataloader_idx=0):
         tweets, labels = batch
-        val_loss, logits = self.model(tweets, labels=labels)
+        val_loss, logits = self.model(
+            tweets[0], attention_mask=tweets[1], labels=labels
+        )
         preds = torch.argmax(logits, dim=1)
         correct = (preds == labels).sum()
         accuracy = correct / len(labels)
@@ -67,7 +72,10 @@ class MegaCoolTransformer(LightningModule):
     ) -> tuple[list[torch.optim.Optimizer], list[object]]:
         if self.config.train["optimizer"] == "AdamW":
             optimizer = torch.optim.AdamW(
-                self.parameters(), lr=self.config.train["lr"]
+                self.parameters(),
+                lr=float(self.config.train["lr"]),
+                eps=float(self.config.train["eps"]),
+                betas=(0.9, 0.999),
             )  # type: torch.optim.Optimizer
         elif self.config.train["optimizer"] == "Adam":
             optimizer = torch.optim.Adam(self.parameters(), lr=self.config.train["lr"])

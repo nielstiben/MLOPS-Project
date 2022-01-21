@@ -27,7 +27,7 @@ def main(config: DictConfig):
     response = client.access_secret_version(name=resource_name)
     api_key = response.payload.data.decode("UTF-8")
     os.environ["WANDB_API_KEY"] = api_key
-    wandb.init(project="NLP-BERT", config=config)
+    wandb.init(project="NLP-BERT", entity="dtu-mlops", config=config)
 
     gpus = 0
     if torch.cuda.is_available():
@@ -44,9 +44,12 @@ def main(config: DictConfig):
     model = MegaCoolTransformer(config)
 
     trainer = Trainer(
-        max_epochs=5,
+        max_epochs=config.train.epochs,
         gpus=gpus,
         logger=pl.loggers.WandbLogger(project="mlops-mnist", config=config),
+        val_check_interval=1.0,
+        check_val_every_n_epoch=1,
+        gradient_clip_val=1.0,
     )
     trainer.fit(model, data_module)
     trainer.test(model, data_module)

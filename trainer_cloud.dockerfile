@@ -23,6 +23,7 @@ COPY .git/ .git/
 COPY .dvc/config .dvc/config
 COPY .dvc/plots .dvc/plots
 COPY data/processed.dvc data/processed.dvc
+COPY data/interim.dvc data/interim.dvc
 COPY config/ config/
 COPY docker_run_training.sh docker_run_training.sh
 ENTRYPOINT ["./docker_run_training.sh"]

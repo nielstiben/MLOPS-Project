@@ -2,6 +2,7 @@
 import os
 from typing import Optional
 
+import numpy as np
 import pytorch_lightning as pl
 import torch
 from torch.utils.data import DataLoader
@@ -10,34 +11,47 @@ from torch.utils.data.dataset import Dataset
 
 class DesasterTweets(Dataset):
     def __init__(self, path: str, type: str = "train") -> None:
+        def load_csv(path, filename, label=False):
+            n = np.genfromtxt(os.path.join(path, filename), delimiter=",")
+            t = torch.from_numpy(n)
+            if label:
+                return t.to(torch.int64)
+            else:
+                return t
+
         if type == "train":
-            file_tweets = os.path.join(path, "tweets_train.pkl")
-            file_labels = os.path.join(path, "label_train.pkl")
+            self.input_ids = load_csv(path, "train_input_ids.csv").int()
+            self.input_mask = load_csv(path, "train_input_mask.csv")
+            self.segment_ids = load_csv(path, "train_segment_ids.csv")
+            self.labels = load_csv(path, "train_labels.csv", label=True)
         elif type == "test":
-            file_tweets = os.path.join(path, "tweets_test.pkl")
-            file_labels = os.path.join(path, "label_test.pkl")
+            self.input_ids = load_csv(path, "test_input_ids.csv").int()
+            self.input_mask = load_csv(path, "test_input_mask.csv")
+            self.segment_ids = load_csv(path, "test_segment_ids.csv")
+            self.labels = load_csv(path, "train_labels.csv", label=True)
         elif type == "eval":
-            file_tweets = os.path.join(path, "tweets_eval.pkl")
-            file_labels = os.path.join(path, "label_eval.pkl")
+            self.input_ids = load_csv(path, "val_input_ids.csv").int()
+            self.input_mask = load_csv(path, "val_input_mask.csv")
+            self.segment_ids = load_csv(path, "val_segment_ids.csv")
+            self.labels = load_csv(path, "val_labels.csv", label=True)
         else:
             raise Exception(f"Unknown Dataset type: {type}")
 
-        self.tweets = torch.load(file_tweets)
-        self.labels = torch.load(file_labels)
-
-        assert len(self.tweets) == len(
-            self.labels
-        ), "Number of tweets does not match the number of labels"
-
     def __len__(self) -> int:
-        return len(self.tweets)
+        return len(self.input_ids)
 
-    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
-        return self.tweets[idx], self.labels[idx]
+    def __getitem__(self, idx: int):
+        return (
+            self.input_ids[idx],
+            self.input_mask[idx],
+            self.segment_ids[idx],
+        ), self.labels[idx]
 
 
 class DesasterTweetDataModule(pl.LightningDataModule):
-    def __init__(self, data_path: str, batch_size: int = 32):
+    def __init__(
+        self, data_path: str, batch_size: int = 8
+    ):  # todo: Batch size from config
         super().__init__()
         self.data_path = os.path.join(data_path, "processed")
         self.batch_size = batch_size
