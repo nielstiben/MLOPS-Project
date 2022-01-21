@@ -5,7 +5,6 @@ from pytorch_lightning import LightningModule
 # fmt: off # isort:skip
 from transformers import (  # isort:skip
     BertForSequenceClassification,  # isort:skip
-    DistilBertForSequenceClassification,  # isort:skip
 )  # isort:skip
 
 
@@ -13,51 +12,65 @@ class MegaCoolTransformer(LightningModule):
     def __init__(self, config: DictConfig):
         super().__init__()
         self.config = config
+        self.model = BertForSequenceClassification.from_pretrained(
+            self.config.model["pretrained-model"],
+            torchscript=True,
+            num_labels=self.config.model["num_labels"],
+        )
 
-        if self.config.model["model"] == "bert":
-            self.model = BertForSequenceClassification.from_pretrained(
-                self.config.model["pretrained-model"],
-                num_labels=self.config.model["num_labels"],
-                output_attentions=False,
-                output_hidden_states=False,
-                torchscript=True,
-            )
-        else:  # default model is distilbert
-            self.model = DistilBertForSequenceClassification.from_pretrained(
-                self.config.model["pretrained-model"],
-                num_labels=self.config.model["num_labels"],
-                output_attentions=False,
-                output_hidden_states=False,
-                torchscript=True,
-            )
-
-    def forward(self, inputs):
-        return self.model(inputs)
+    def forward(self, batch):
+        b_input_ids = batch[0]
+        b_input_mask = batch[1]
+        return self.model(b_input_ids, token_type_ids=None, attention_mask=b_input_mask)
 
     def training_step(self, batch, batch_idx):
-        tweet, labels = batch
-        loss, _ = self.model(tweet, labels=labels)
+        b_input_ids = batch[0]
+        b_input_mask = batch[1]
+        b_labels = batch[2]
+        (loss, _) = self.model(
+            b_input_ids,
+            token_type_ids=None,
+            attention_mask=b_input_mask,
+            labels=b_labels,
+        )
         self.log("train_loss", loss)
         return loss
 
     def test_step(self, batch, batch_idx):
-        tweet, labels = batch
-        (logits,) = self(tweet)
+        b_input_ids = batch[0]
+        b_input_mask = batch[1]
+        b_labels = batch[2]
+        (test_loss, logits) = self.model(
+            b_input_ids,
+            token_type_ids=None,
+            attention_mask=b_input_mask,
+            labels=b_labels,
+        )
         preds = torch.argmax(logits, dim=1)
-        correct = (preds == labels).sum()
-        accuracy = correct / len(labels)
+        correct = (preds == b_labels).sum()
+        accuracy = correct / len(b_labels)
+        self.log("test_loss", test_loss, prog_bar=True)
         self.log("test_accuracy", accuracy, prog_bar=True)
 
+        return {"loss": test_loss, "preds": preds, "labels": b_labels}
+
     def validation_step(self, batch, batch_idx, dataloader_idx=0):
-        tweets, labels = batch
-        val_loss, logits = self.model(tweets, labels=labels)
+        b_input_ids = batch[0]
+        b_input_mask = batch[1]
+        b_labels = batch[2]
+        (val_loss, logits) = self.model(
+            b_input_ids,
+            token_type_ids=None,
+            attention_mask=b_input_mask,
+            labels=b_labels,
+        )
         preds = torch.argmax(logits, dim=1)
-        correct = (preds == labels).sum()
-        accuracy = correct / len(labels)
+        correct = (preds == b_labels).sum()
+        accuracy = correct / len(b_labels)
         self.log("val_loss", val_loss, prog_bar=True)
         self.log("val_accuracy", accuracy, prog_bar=True)
 
-        return {"loss": val_loss, "preds": preds, "labels": labels}
+        return {"loss": val_loss, "preds": preds, "labels": b_labels}
 
     def setup(self, stage=None) -> None:
         pass
@@ -67,7 +80,10 @@ class MegaCoolTransformer(LightningModule):
     ) -> tuple[list[torch.optim.Optimizer], list[object]]:
         if self.config.train["optimizer"] == "AdamW":
             optimizer = torch.optim.AdamW(
-                self.parameters(), lr=self.config.train["lr"]
+                self.parameters(),
+                lr=float(self.config.train["lr"]),
+                eps=float(self.config.train["eps"]),
+                betas=(0.9, 0.999),
             )  # type: torch.optim.Optimizer
         elif self.config.train["optimizer"] == "Adam":
             optimizer = torch.optim.Adam(self.parameters(), lr=self.config.train["lr"])
@@ -136,7 +152,8 @@ class MegaCoolTransformer(LightningModule):
         return [optimizer], [scheduler]
 
     def save_jit(self, file: str = "deployable_model.pt") -> None:
-        tokens_tensor = torch.Tensor(1, 140).int()
-        self.model.eval()
-        script_model = torch.jit.trace(self.model, [tokens_tensor])
+        token_len = self.config["build_features"]["max_sequence_length"]
+        tokens_tensor = torch.ones(1, token_len).long()
+        mask_tensor = torch.ones(1, token_len).float()
+        script_model = torch.jit.trace(self.model, [tokens_tensor, mask_tensor])
         script_model.save(file)

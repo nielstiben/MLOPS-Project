@@ -1,5 +1,5 @@
 path: data
-max_sequence_length: 140
-split_train: 80
-split_test: 10
-split_eval: 10
+max_sequence_length: 64
+split_train: 0.8
+split_test: 0.1
+split_eval: 0.1

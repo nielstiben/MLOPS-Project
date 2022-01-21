@@ -17,8 +17,10 @@ def test_distil_model_output_shape():
 
         cfg.model["model"] = "distilbert"
         model = MegaCoolTransformer(cfg)
-        x = torch.randint(0, 1000, (5, 140))
-        (logits,) = model(x)
+        token_len = cfg["build_features"]["max_sequence_length"]
+        x = torch.randint(0, 1000, (5, token_len))
+        y = torch.randint(0, 1000, (5, token_len))
+        (logits,) = model((x, y))
 
         assert logits.shape == torch.Size([5, 2])
 
@@ -33,4 +35,4 @@ def test_distil_model_is_default():
         cfg.model["model"] = "non-existing-model"
         model = MegaCoolTransformer(cfg)
 
-        assert "DistilBertForSequenceClassification" in str(type(model.model))
+        assert "BertForSequenceClassification" in str(type(model.model))
