@@ -1,8 +1,10 @@
 import io
 
+import nltk
 import torch
 from google.cloud import storage
 from transformers import AutoTokenizer
+from tweet_cleaner import clean_tweet
 
 BUCKET_NAME = "cloud_function_models"
 MODEL_FILE = "deployable_model.pt"
@@ -17,30 +19,45 @@ model = torch.jit.load(my_model)
 model.eval()
 tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
 
+nltk.download("wordnet")
+nltk.download("omw-1.4")
+
 
 def encode(text: str) -> list[int]:
-    tokens = tokenizer.encode(text)
-    tokens = tokens[: 140 - 2]
-    pad_len = 140 - len(tokens)
-    tokens += [0] * pad_len
-    return tokens
+    indices = tokenizer.encode_plus(
+        text,
+        max_length=64,
+        add_special_tokens=True,
+        return_attention_mask=True,
+        pad_to_max_length=True,
+        truncation=True,
+    )
+    return indices["input_ids"], indices["attention_mask"]
 
 
 def predict(request):
     request_json = request.get_json()
     tweet = request_json["tweet"]
-    tweet = encode(tweet)
+    tweet = clean_tweet(tweet)
+    tweet, mask = encode(tweet)
     tweet = torch.IntTensor(tweet)
+    mask = torch.LongTensor(mask)
     tweet.unsqueeze_(0)
-    (pred,) = model(tweet)
+    mask.unsqueeze_(0)
+    (pred,) = model(tweet, mask)
     pred = torch.argmax(pred, 1).item()
     if pred == 0:
-        answer = "This is not a desaster tweet"
+        answer = "This is not a disaster tweet"
+        meme = "https://pyxis.nymag.com/v1/imgs/9ef/336/775d89db9c8ffcd8589f3acdf37d0e323f-25-this-is-fine-lede-new.2x.rhorizontal.w700.jpg"  # noqa: E501
     elif pred == 1:
-        answer = "This is a desaster tweet"
+        answer = "This is a disaster tweet"
+        meme = "https://memegenerator.net/img/instances/57036215/this-is-a-fucking-disaster.jpg"  # noqa: E501
     else:
         answer = "error"
-    return answer
+        meme = "error"
+
+    resp = {"prediction": pred, "answer": answer, "picture": meme}
+    return resp
 
 
 print("init done")
